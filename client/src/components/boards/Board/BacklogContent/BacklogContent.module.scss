@@ -166,4 +166,21 @@
     padding: 24px 0;
     text-align: center;
   }
+
+  .sectionTitle {
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    font-size: 15px;
+    font-weight: bold;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 16px;
+  }
+
+  .doneSection {
+    margin-top: 12px;
+    opacity: 0.82;
+  }
 }

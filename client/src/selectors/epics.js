@@ -154,6 +154,36 @@ export const selectEpicsForCurrentBoard = createSelector(
   },
 );
 
+export const selectEpicsWithCompletionForCurrentBoard = createSelector(
+  orm,
+  (state) => selectPath(state).boardId,
+  ({ Board }, boardId) => {
+    if (!boardId) {
+      return [];
+    }
+
+    const boardModel = Board.withId(boardId);
+
+    if (!boardModel) {
+      return [];
+    }
+
+    return boardModel
+      .getEpicsQuerySet()
+      .toModelArray()
+      .map((epicModel) => {
+        const cards = epicModel.cards.toRefArray();
+        const total = cards.length;
+        const completed = cards.reduce((result, card) => (card.isClosed ? result + 1 : result), 0);
+
+        return {
+          ...epicModel.ref,
+          isCompleted: total > 0 && completed === total,
+        };
+      });
+  },
+);
+
 export const selectEpicsForCurrentBoardByGantt = createSelector(
   orm,
   (state) => selectPath(state).boardId,
@@ -186,5 +216,6 @@ export default {
   makeSelectEpicCommentById,
   selectEpicCommentById,
   selectEpicsForCurrentBoard,
+  selectEpicsWithCompletionForCurrentBoard,
   selectEpicsForCurrentBoardByGantt,
 };

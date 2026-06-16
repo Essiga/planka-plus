@@ -3,7 +3,7 @@
  * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
@@ -23,12 +23,15 @@ import styles from './BacklogContent.module.scss';
 import globalStyles from '../../../../styles.module.scss';
 
 const BacklogContent = React.memo(() => {
-  const epics = useSelector(selectors.selectEpicsForCurrentBoard);
+  const epics = useSelector(selectors.selectEpicsWithCompletionForCurrentBoard);
 
   const canEdit = useSelector((state) => {
     const boardMembership = selectors.selectCurrentUserMembershipForCurrentBoard(state);
     return !!boardMembership && boardMembership.role === BoardMembershipRoles.EDITOR;
   });
+
+  const activeEpics = useMemo(() => epics.filter((epic) => !epic.isCompleted), [epics]);
+  const doneEpics = useMemo(() => epics.filter((epic) => epic.isCompleted), [epics]);
 
   const dispatch = useDispatch();
   const [t] = useTranslation();
@@ -90,7 +93,10 @@ const BacklogContent = React.memo(() => {
 
       switch (type) {
         case DroppableTypes.EPIC:
-          dispatch(entryActions.moveEpic(id, destination.index));
+          // Only the active list is reorderable
+          if (source.droppableId === 'epics' && destination.droppableId === 'epics') {
+            dispatch(entryActions.moveEpic(id, destination.index));
+          }
 
           break;
         case DroppableTypes.EPIC_CARD:
@@ -140,7 +146,12 @@ const BacklogContent = React.memo(() => {
                   {...droppableProps} // eslint-disable-line react/jsx-props-no-spreading
                   ref={innerRef}
                 >
-                  {epics.map((epic, index) => (
+                  {activeEpics.length === 0 && (
+                    <div className={styles.empty}>
+                      {t('common.noActiveEpics', { defaultValue: 'No active epics' })}
+                    </div>
+                  )}
+                  {activeEpics.map((epic, index) => (
                     <EpicItem
                       key={epic.id}
                       id={epic.id}
@@ -153,6 +164,35 @@ const BacklogContent = React.memo(() => {
                 </div>
               )}
             </Droppable>
+
+            {doneEpics.length > 0 && (
+              <>
+                <div className={styles.sectionTitle}>
+                  {t('common.done', { defaultValue: 'Done' })} ({doneEpics.length})
+                </div>
+                <Droppable droppableId="done-epics" type={DroppableTypes.EPIC_DONE}>
+                  {({ innerRef, droppableProps, placeholder }) => (
+                    <div
+                      {...droppableProps} // eslint-disable-line react/jsx-props-no-spreading
+                      ref={innerRef}
+                      className={styles.doneSection}
+                    >
+                      {doneEpics.map((epic, index) => (
+                        <EpicItem
+                          key={epic.id}
+                          id={epic.id}
+                          index={index}
+                          canEdit={canEdit}
+                          draggable={false}
+                          onOpen={handleEpicOpen}
+                        />
+                      ))}
+                      {placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </>
+            )}
           </DragDropContext>
         )}
       </div>

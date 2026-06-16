@@ -64,7 +64,7 @@ export function* updateEpic(id, data) {
 
 export function* moveEpic(id, index) {
   const { boardId } = yield select(selectors.selectEpicById, id);
-  const position = yield select(selectors.selectNextEpicPosition, boardId, index, id);
+  const position = yield select(selectors.selectNextActiveEpicPosition, boardId, index, id);
 
   yield call(updateEpic, id, {
     position,

@@ -22,7 +22,7 @@ import DroppableTypes from '../../../../constants/DroppableTypes';
 import styles from './BacklogContent.module.scss';
 import globalStyles from '../../../../styles.module.scss';
 
-const EpicItem = React.memo(({ id, index, canEdit, onOpen }) => {
+const EpicItem = React.memo(({ id, index, canEdit, draggable, onOpen }) => {
   const selectEpicById = useMemo(() => selectors.makeSelectEpicById(), []);
   const selectEpicProgressById = useMemo(() => selectors.makeSelectEpicProgressById(), []);
   const selectCardIdsByEpicId = useMemo(() => selectors.makeSelectCardIdsByEpicId(), []);
@@ -72,7 +72,7 @@ const EpicItem = React.memo(({ id, index, canEdit, onOpen }) => {
     <Draggable
       draggableId={`epic:${id}`}
       index={index}
-      isDragDisabled={!canEdit || !epic.isPersisted}
+      isDragDisabled={!canEdit || !draggable || !epic.isPersisted}
     >
       {({ innerRef, draggableProps, dragHandleProps }) => (
         <div
@@ -81,7 +81,7 @@ const EpicItem = React.memo(({ id, index, canEdit, onOpen }) => {
           className={styles.epic}
         >
           <div className={styles.epicHeader}>
-            {canEdit && (
+            {canEdit && draggable && (
               <span
                 {...dragHandleProps} // eslint-disable-line react/jsx-props-no-spreading
                 className={styles.dragHandle}
@@ -209,7 +209,12 @@ EpicItem.propTypes = {
   id: PropTypes.string.isRequired,
   index: PropTypes.number.isRequired,
   canEdit: PropTypes.bool.isRequired,
+  draggable: PropTypes.bool,
   onOpen: PropTypes.func.isRequired,
+};
+
+EpicItem.defaultProps = {
+  draggable: true,
 };
 
 export default EpicItem;

@@ -8,6 +8,7 @@ const LABEL = 'LABEL';
 const LIST = 'LIST';
 const CARD = 'CARD';
 const EPIC = 'EPIC';
+const EPIC_DONE = 'EPIC_DONE';
 const EPIC_CARD = 'EPIC_CARD';
 const TASK_LIST = 'TASK_LIST';
 const TASK = 'TASK';
@@ -20,6 +21,7 @@ export default {
   LIST,
   CARD,
   EPIC,
+  EPIC_DONE,
   EPIC_CARD,
   TASK_LIST,
   TASK,

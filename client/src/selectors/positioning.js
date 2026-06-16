@@ -79,6 +79,34 @@ export const selectNextEpicPosition = createSelector(
   },
 );
 
+export const selectNextActiveEpicPosition = createSelector(
+  orm,
+  (_, boardId) => boardId,
+  (_, __, index) => index,
+  (_, __, ___, excludedId) => excludedId,
+  ({ Board }, boardId, index, excludedId) => {
+    const boardModel = Board.withId(boardId);
+
+    if (!boardModel) {
+      return boardModel;
+    }
+
+    // Only reorder among non-completed epics (completed ones live in the Done section)
+    const activeEpics = boardModel
+      .getEpicsQuerySet()
+      .toModelArray()
+      .filter((epicModel) => {
+        const cards = epicModel.cards.toRefArray();
+        const total = cards.length;
+        const completed = cards.reduce((result, card) => (card.isClosed ? result + 1 : result), 0);
+        return !(total > 0 && completed === total);
+      })
+      .map((epicModel) => epicModel.ref);
+
+    return nextPosition(activeEpics, index, excludedId);
+  },
+);
+
 export const selectNextEpicGanttPosition = createSelector(
   orm,
   (_, boardId) => boardId,
@@ -264,6 +292,7 @@ export default {
   selectNextBoardPosition,
   selectNextLabelPosition,
   selectNextEpicPosition,
+  selectNextActiveEpicPosition,
   selectNextEpicGanttPosition,
   selectNextCardInEpicPosition,
   selectNextListPosition,
