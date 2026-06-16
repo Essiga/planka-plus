@@ -3,7 +3,7 @@
  * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
  */
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import {
@@ -15,10 +15,25 @@ import {
 import { full as toolbarsPreset } from '@gravity-ui/markdown-editor/_/modules/toolbars/presets';
 import { ActionName } from '@gravity-ui/markdown-editor/_/bundle/config/action-names';
 /* eslint-enable import/no-unresolved */
+import { useTranslation } from 'react-i18next';
 
 import { EditorModes } from '../../../constants/Enums';
+import Paths from '../../../constants/Paths';
+import CardLinkPicker from './CardLinkPicker';
 
 import styles from './MarkdownEditor.module.scss';
+
+// Icon shown for the "/link-card" command-menu entry (gravity-ui Icon accepts an SVG component)
+function LinkCardIcon(props) {
+  return (
+    // eslint-disable-next-line react/jsx-props-no-spreading
+    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" {...props}>
+      <path d="M2 4.5A2.5 2.5 0 0 1 4.5 2h7A2.5 2.5 0 0 1 14 4.5v4a.75.75 0 0 1-1.5 0v-4a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h4a.75.75 0 0 1 0 1.5h-4A2.5 2.5 0 0 1 2 11.5v-7Z" />
+      <path d="M8.5 11.5a2 2 0 0 1 2-2h1a2 2 0 1 1 0 4h-1a.6.6 0 0 1 0-1.2h1a.8.8 0 0 0 0-1.6h-1a.8.8 0 0 0-.8.8.6.6 0 0 1-1.2 0Zm3.8-.6h1a.8.8 0 0 0 0-1.6h-1a.6.6 0 0 1 0-1.2Z" />
+      <path d="M10.25 11.5a.6.6 0 0 1 .6-.6h2.3a.6.6 0 0 1 0 1.2h-2.3a.6.6 0 0 1-.6-.6Z" />
+    </svg>
+  );
+}
 
 const removedActionNamesSet = new Set([
   ActionName.checkbox,
@@ -61,7 +76,33 @@ const MarkdownEditor = React.forwardRef(
     { defaultValue, defaultMode, isError, onChange, onSubmit, onCancel, onModeChange, ...props },
     ref,
   ) => {
+    const [t] = useTranslation();
+
     const wrapperRef = useRef(null);
+    const actionStorageRef = useRef(null);
+
+    const [isCardPickerOpened, setIsCardPickerOpened] = useState(false);
+
+    const commandMenuActionsWithCardLink = useMemo(
+      () => [
+        ...commandMenuActions,
+        {
+          id: 'link-card',
+          title: () => t('action.linkCard', { defaultValue: 'Link card' }),
+          aliases: ['link-card', 'card', 'link card'],
+          hint: () =>
+            t('common.linkCardHint', { defaultValue: 'Insert a link to a card on this board' }),
+          icon: { data: LinkCardIcon },
+          isEnable: () => true,
+          isActive: () => false,
+          exec: (actionStorage) => {
+            actionStorageRef.current = actionStorage;
+            setIsCardPickerOpened(true);
+          },
+        },
+      ],
+      [t],
+    );
 
     const handleWrapperRef = useCallback(
       (element) => {
@@ -88,7 +129,7 @@ const MarkdownEditor = React.forwardRef(
       wysiwygConfig: {
         extensionOptions: {
           commandMenu: {
-            actions: commandMenuActions,
+            actions: commandMenuActionsWithCardLink,
           },
         },
         searchPanel: false, // TODO: cancel event does not fire when enabled
@@ -149,6 +190,30 @@ const MarkdownEditor = React.forwardRef(
       };
     }, []);
 
+    const handleCardLinkSelect = useCallback(
+      (card) => {
+        setIsCardPickerOpened(false);
+
+        // Guard against future editor versions changing/removing this internal action,
+        // so a broken upgrade degrades to a no-op instead of throwing.
+        const linkAction = actionStorageRef.current?.actions?.link;
+        if (linkAction) {
+          const href = Paths.CARDS.replace(':id', card.id);
+          const text = card.name || t('common.noName', { defaultValue: 'No name' });
+
+          linkAction.run({ href, text });
+        }
+
+        editor.focus();
+      },
+      [editor, t],
+    );
+
+    const handleCardLinkClose = useCallback(() => {
+      setIsCardPickerOpened(false);
+      editor.focus();
+    }, [editor]);
+
     return (
       <div
         {...props} // eslint-disable-line react/jsx-props-no-spreading
@@ -162,6 +227,9 @@ const MarkdownEditor = React.forwardRef(
           toolbarsPreset={toolbarsPreset}
           className={styles.editor}
         />
+        {isCardPickerOpened && (
+          <CardLinkPicker onSelect={handleCardLinkSelect} onClose={handleCardLinkClose} />
+        )}
       </div>
     );
   },
