@@ -228,6 +228,34 @@
     width: 100%;
   }
 
+  .datePicker {
+    width: 100%;
+
+    :global(.react-datepicker__input-container) {
+      display: block;
+      width: 100%;
+    }
+  }
+
+  .datePickerPopper {
+    z-index: 2000;
+
+    :global(.react-datepicker__day--disabled),
+    :global(.react-datepicker__day--excluded) {
+      background: #f0f1f3;
+      border-radius: 0;
+      color: #c0c4c8;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    :global(.react-datepicker__day--disabled:hover),
+    :global(.react-datepicker__day--excluded:hover) {
+      background: #f0f1f3;
+      color: #c0c4c8;
+    }
+  }
+
   /* Cards */
   .cardList {
     list-style: none;

@@ -79,6 +79,30 @@ export const selectNextEpicPosition = createSelector(
   },
 );
 
+export const selectNextEpicGanttPosition = createSelector(
+  orm,
+  (_, boardId) => boardId,
+  (_, __, index) => index,
+  (_, __, ___, excludedId) => excludedId,
+  ({ Board }, boardId, index, excludedId) => {
+    const boardModel = Board.withId(boardId);
+
+    if (!boardModel) {
+      return boardModel;
+    }
+
+    const positionables = boardModel
+      .getEpicsByGanttQuerySet()
+      .toRefArray()
+      .map((epic) => ({
+        ...epic,
+        position: epic.ganttPosition == null ? epic.position : epic.ganttPosition,
+      }));
+
+    return nextPosition(positionables, index, excludedId);
+  },
+);
+
 export const selectNextCardInEpicPosition = createSelector(
   orm,
   (_, epicId) => epicId,
@@ -240,6 +264,7 @@ export default {
   selectNextBoardPosition,
   selectNextLabelPosition,
   selectNextEpicPosition,
+  selectNextEpicGanttPosition,
   selectNextCardInEpicPosition,
   selectNextListPosition,
   selectNextCardPosition,

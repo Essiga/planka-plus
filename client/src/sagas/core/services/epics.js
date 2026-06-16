@@ -71,6 +71,15 @@ export function* moveEpic(id, index) {
   });
 }
 
+export function* moveEpicInGantt(id, index) {
+  const { boardId } = yield select(selectors.selectEpicById, id);
+  const ganttPosition = yield select(selectors.selectNextEpicGanttPosition, boardId, index, id);
+
+  yield call(updateEpic, id, {
+    ganttPosition,
+  });
+}
+
 export function* handleEpicUpdate(epic) {
   yield put(actions.handleEpicUpdate(epic));
 }
@@ -98,6 +107,7 @@ export default {
   createEpicInCurrentBoard,
   handleEpicCreate,
   moveEpic,
+  moveEpicInGantt,
   updateEpic,
   handleEpicUpdate,
   deleteEpic,

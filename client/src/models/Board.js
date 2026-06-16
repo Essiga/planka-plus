@@ -286,6 +286,16 @@ export default class extends BaseModel {
     return this.epics.orderBy(['position', 'id.length', 'id']);
   }
 
+  getEpicsByGanttQuerySet() {
+    // Gantt order is independent of the backlog order; epics not yet reordered in the
+    // Gantt fall back to their backlog position
+    return this.epics.orderBy([
+      (epic) => (epic.ganttPosition == null ? epic.position : epic.ganttPosition),
+      'id.length',
+      'id',
+    ]);
+  }
+
   getListsQuerySet() {
     return this.lists.orderBy(['position', 'id.length', 'id']);
   }

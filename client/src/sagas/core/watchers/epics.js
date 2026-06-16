@@ -19,6 +19,9 @@ export default function* epicsWatchers() {
     takeEvery(EntryActionTypes.EPIC_MOVE, ({ payload: { id, index } }) =>
       services.moveEpic(id, index),
     ),
+    takeEvery(EntryActionTypes.EPIC_IN_GANTT_MOVE, ({ payload: { id, index } }) =>
+      services.moveEpicInGantt(id, index),
+    ),
     takeEvery(EntryActionTypes.EPIC_UPDATE, ({ payload: { id, data } }) =>
       services.updateEpic(id, data),
     ),

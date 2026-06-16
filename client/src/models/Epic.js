@@ -14,6 +14,7 @@ export default class extends BaseModel {
   static fields = {
     id: attr(),
     position: attr(),
+    ganttPosition: attr(),
     name: attr(),
     description: attr(),
     color: attr(),

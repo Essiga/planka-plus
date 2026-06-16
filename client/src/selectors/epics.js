@@ -154,6 +154,24 @@ export const selectEpicsForCurrentBoard = createSelector(
   },
 );
 
+export const selectEpicsForCurrentBoardByGantt = createSelector(
+  orm,
+  (state) => selectPath(state).boardId,
+  ({ Board }, boardId) => {
+    if (!boardId) {
+      return [];
+    }
+
+    const boardModel = Board.withId(boardId);
+
+    if (!boardModel) {
+      return [];
+    }
+
+    return boardModel.getEpicsByGanttQuerySet().toRefArray();
+  },
+);
+
 export default {
   makeSelectEpicById,
   selectEpicById,
@@ -168,4 +186,5 @@ export default {
   makeSelectEpicCommentById,
   selectEpicCommentById,
   selectEpicsForCurrentBoard,
+  selectEpicsForCurrentBoardByGantt,
 };

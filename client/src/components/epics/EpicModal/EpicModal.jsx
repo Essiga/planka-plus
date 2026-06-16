@@ -5,12 +5,12 @@
 
 import upperFirst from 'lodash/upperFirst';
 import camelCase from 'lodash/camelCase';
-import { format } from 'date-fns';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import DatePicker from 'react-datepicker';
 import { Button, Comment as SuiComment, Dropdown, Grid, Icon } from 'semantic-ui-react';
 import { push } from '../../../lib/redux-router';
 import { useDidUpdate } from '../../../lib/hooks';
@@ -28,8 +28,6 @@ import Comment from './Comment';
 
 import styles from './EpicModal.module.scss';
 import globalStyles from '../../../styles.module.scss';
-
-const toInputDate = (date) => (date ? format(date, 'yyyy-MM-dd') : '');
 
 const EpicModal = React.memo(({ id, canEdit, onClose }) => {
   const selectEpicById = useMemo(() => selectors.makeSelectEpicById(), []);
@@ -78,17 +76,15 @@ const EpicModal = React.memo(({ id, canEdit, onClose }) => {
   );
 
   const handleStartDateChange = useCallback(
-    (event) => {
-      const { value } = event.target;
-      dispatch(entryActions.updateEpic(id, { startDate: value ? new Date(value) : null }));
+    (date) => {
+      dispatch(entryActions.updateEpic(id, { startDate: date || null }));
     },
     [id, dispatch],
   );
 
   const handleEndDateChange = useCallback(
-    (event) => {
-      const { value } = event.target;
-      dispatch(entryActions.updateEpic(id, { endDate: value ? new Date(value) : null }));
+    (date) => {
+      dispatch(entryActions.updateEpic(id, { endDate: date || null }));
     },
     [id, dispatch],
   );
@@ -360,22 +356,31 @@ const EpicModal = React.memo(({ id, canEdit, onClose }) => {
               <div className={styles.text}>
                 {t('common.startDate', { defaultValue: 'Start date' })}
               </div>
-              <input
-                type="date"
+              <DatePicker
+                selected={epic.startDate || null}
                 disabled={!canEdit}
+                dateFormat="dd.MM.yyyy"
+                maxDate={epic.endDate || undefined}
+                placeholderText={t('common.startDate', { defaultValue: 'Start date' })}
                 className={styles.dateInput}
-                value={toInputDate(epic.startDate)}
+                wrapperClassName={styles.datePicker}
+                popperClassName={styles.datePickerPopper}
                 onChange={handleStartDateChange}
               />
             </div>
 
             <div className={styles.sidebarSection}>
               <div className={styles.text}>{t('common.endDate', { defaultValue: 'End date' })}</div>
-              <input
-                type="date"
+              <DatePicker
+                selected={epic.endDate || null}
                 disabled={!canEdit}
+                dateFormat="dd.MM.yyyy"
+                minDate={epic.startDate || undefined}
+                openToDate={epic.endDate || epic.startDate || undefined}
+                placeholderText={t('common.endDate', { defaultValue: 'End date' })}
                 className={styles.dateInput}
-                value={toInputDate(epic.endDate)}
+                wrapperClassName={styles.datePicker}
+                popperClassName={styles.datePickerPopper}
                 onChange={handleEndDateChange}
               />
             </div>

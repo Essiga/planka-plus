@@ -138,6 +138,11 @@ module.exports = {
       type: 'number',
       required: true,
     },
+    ganttPosition: {
+      type: 'number',
+      allowNull: true,
+      columnName: 'gantt_position',
+    },
     name: {
       type: 'string',
       isNotEmptyString: true,

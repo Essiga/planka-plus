@@ -27,6 +27,14 @@ const moveEpic = (id, index) => ({
   },
 });
 
+const moveEpicInGantt = (id, index) => ({
+  type: EntryActionTypes.EPIC_IN_GANTT_MOVE,
+  payload: {
+    id,
+    index,
+  },
+});
+
 const updateEpic = (id, data) => ({
   type: EntryActionTypes.EPIC_UPDATE,
   payload: {
@@ -60,6 +68,7 @@ export default {
   createEpicInCurrentBoard,
   handleEpicCreate,
   moveEpic,
+  moveEpicInGantt,
   updateEpic,
   handleEpicUpdate,
   deleteEpic,

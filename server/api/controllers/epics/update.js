@@ -92,6 +92,11 @@ module.exports = {
       type: 'number',
       min: 0,
     },
+    ganttPosition: {
+      type: 'number',
+      min: 0,
+      allowNull: true,
+    },
     name: {
       type: 'string',
       isNotEmptyString: true,
@@ -154,6 +159,7 @@ module.exports = {
 
     const values = _.pick(inputs, [
       'position',
+      'ganttPosition',
       'name',
       'description',
       'color',

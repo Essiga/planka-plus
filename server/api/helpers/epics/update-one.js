@@ -67,6 +67,49 @@ module.exports = {
       }
     }
 
+    if (!_.isUndefined(values.ganttPosition) && !_.isNull(values.ganttPosition)) {
+      const epics = await Epic.qm.getByBoardId(inputs.record.boardId, {
+        exceptIdOrIds: inputs.record.id,
+      });
+
+      // Gantt order is independent of the backlog order; fall back to the backlog
+      // position for epics that have not been reordered in the Gantt yet
+      const positionables = epics
+        .map((epicItem) => ({
+          ...epicItem,
+          position: _.isNil(epicItem.ganttPosition) ? epicItem.position : epicItem.ganttPosition,
+        }))
+        .sort((a, b) => a.position - b.position);
+
+      const { position, repositions } = sails.helpers.utils.insertToPositionables(
+        values.ganttPosition,
+        positionables,
+      );
+
+      values.ganttPosition = position;
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const reposition of repositions) {
+        // eslint-disable-next-line no-await-in-loop
+        await Epic.qm.updateOne(
+          {
+            id: reposition.record.id,
+            boardId: reposition.record.boardId,
+          },
+          {
+            ganttPosition: reposition.position,
+          },
+        );
+
+        sails.sockets.broadcast(`board:${inputs.record.boardId}`, 'epicUpdate', {
+          item: {
+            id: reposition.record.id,
+            ganttPosition: reposition.position,
+          },
+        });
+      }
+    }
+
     const epic = await Epic.qm.updateOne(inputs.record.id, values);
 
     if (epic) {

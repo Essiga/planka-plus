@@ -6,73 +6,172 @@
 :global(#app) {
   .wrapper {
     color: #17394d;
+    display: flex;
+    flex-direction: column;
     height: 100%;
-    overflow: auto;
-    padding: 24px;
+    padding: 16px;
     width: 100%;
   }
 
-  .inner {
+  .toolbar {
+    align-items: center;
+    color: #fff;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .toolbarSpacer {
+    flex: 1 1 auto;
+  }
+
+  .scroll {
     background: #fff;
     border-radius: 6px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-    min-width: 720px;
-    padding: 16px;
-  }
-
-  .labelColumn {
-    flex: 0 0 200px;
-    width: 200px;
-  }
-
-  .axis {
-    display: flex;
-    margin-bottom: 8px;
-  }
-
-  .track {
     flex: 1 1 auto;
+    overflow: auto;
     position: relative;
   }
 
-  .axisTrack {
-    border-bottom: 1px solid #e2e4e6;
-    height: 24px;
+  .inner {
+    position: relative;
   }
 
-  .axisMonth {
-    border-left: 1px solid #e2e4e6;
+  /* Header */
+  .headerRow {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 6;
+  }
+
+  .nameColumn {
+    background: #fafbfc;
+    border-bottom: 1px solid #dfe3e6;
+    border-right: 1px solid #dfe3e6;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    left: 0;
+    position: sticky;
+    z-index: 2;
+  }
+
+  .headerNameColumn {
+    align-items: flex-end;
+    display: flex;
+    padding: 4px 8px;
+    z-index: 4;
+  }
+
+  .timeline {
+    flex: 0 0 auto;
+    position: relative;
+  }
+
+  .monthsRow {
+    height: 24px;
+    position: relative;
+  }
+
+  .monthCell {
+    border-left: 1px solid #dfe3e6;
     bottom: 0;
+    box-sizing: border-box;
     color: #6b808c;
     font-size: 12px;
+    font-weight: bold;
     overflow: hidden;
-    padding-left: 4px;
+    padding-left: 6px;
     position: absolute;
     top: 0;
     white-space: nowrap;
   }
 
-  .row {
-    align-items: center;
+  .daysRow {
+    background: #fafbfc;
+    border-bottom: 1px solid #dfe3e6;
     display: flex;
-    min-height: 36px;
+    height: 24px;
   }
 
-  .rowLabel {
+  .dayCell {
+    box-sizing: border-box;
+    color: #9aa5ad;
+    flex: 0 0 auto;
+    font-size: 11px;
+    overflow: hidden;
+    text-align: center;
+    line-height: 24px;
+  }
+
+  .dayCellWeekend {
+    background: rgba(9, 30, 66, 0.04);
+    color: #b3bac1;
+  }
+
+  .dayCellToday {
+    background: #e9531f;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  /* Rows */
+  .row {
+    display: flex;
+  }
+
+  .rowName {
     align-items: center;
+    background: #fff;
+    border-bottom: 1px solid #f0f1f3;
+    box-sizing: border-box;
     cursor: pointer;
     display: flex;
-    flex: 0 0 200px;
     gap: 8px;
+    left: 0;
     overflow: hidden;
-    padding-right: 12px;
-    width: 200px;
+    padding: 0 8px;
+    position: sticky;
+    z-index: 4;
   }
 
-  .rowLabelName {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .rowName:hover {
+    background: #f4f5f7;
+  }
+
+  .rowNameDraggable {
+    cursor: grab;
+    user-select: none;
+  }
+
+  .rowNameDraggable:active {
+    cursor: grabbing;
+  }
+
+  .dragHandleIcon {
+    color: #b3bac1;
+    flex: 0 0 auto;
+    visibility: hidden;
+  }
+
+  .rowName:hover .dragHandleIcon {
+    visibility: visible;
+  }
+
+  .rowDragging {
+    position: relative;
+    z-index: 5;
+  }
+
+  .rowDragging .rowName {
+    background: #e9f2fb;
+    box-shadow: 0 2px 6px rgba(9, 30, 66, 0.25);
+  }
+
+  .rowDragging .bar {
+    box-shadow: 0 2px 8px rgba(9, 30, 66, 0.4);
   }
 
   .rowColor {
@@ -82,39 +181,98 @@
     width: 12px;
   }
 
-  .barTrack {
+  .rowNameText {
     flex: 1 1 auto;
-    height: 36px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .track {
+    border-bottom: 1px solid #f0f1f3;
+    box-sizing: border-box;
+    flex: 0 0 auto;
     position: relative;
   }
 
-  .gridLine {
-    border-left: 1px solid #f0f1f3;
+  .weekendOverlay {
+    background: rgba(9, 30, 66, 0.035);
     bottom: 0;
     position: absolute;
     top: 0;
   }
 
+  .todayLine {
+    background: #e9531f;
+    bottom: 0;
+    position: absolute;
+    top: 0;
+    width: 2px;
+    z-index: 1;
+  }
+
   .bar {
     border-radius: 4px;
-    cursor: pointer;
-    height: 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    cursor: grab;
     overflow: hidden;
     position: absolute;
-    top: 8px;
+    z-index: 2;
+  }
+
+  .barDragging {
+    cursor: grabbing;
+    opacity: 0.85;
   }
 
   .barFill {
     background: rgba(0, 0, 0, 0.25);
     height: 100%;
+    pointer-events: none;
   }
 
+  .barLabel {
+    bottom: 0;
+    color: #fff;
+    font-size: 11px;
+    left: 6px;
+    line-height: 1;
+    overflow: hidden;
+    pointer-events: none;
+    position: absolute;
+    right: 6px;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+  }
+
+  .barHandle {
+    bottom: 0;
+    cursor: ew-resize;
+    position: absolute;
+    top: 0;
+    width: 8px;
+    z-index: 3;
+  }
+
+  .barHandleLeft {
+    left: 0;
+  }
+
+  .barHandleRight {
+    right: 0;
+  }
+
+  /* Unscheduled */
   .unscheduled {
-    margin-top: 24px;
+    margin-top: 16px;
   }
 
   .unscheduledTitle {
-    color: #6b808c;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 12px;
     font-weight: bold;
     margin-bottom: 8px;
@@ -123,6 +281,9 @@
 
   .unscheduledItem {
     align-items: center;
+    background: transparent;
+    border: none;
+    color: #fff;
     cursor: pointer;
     display: flex;
     gap: 8px;
