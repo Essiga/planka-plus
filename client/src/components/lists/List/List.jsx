@@ -76,6 +76,9 @@ const List = React.memo(({ id, index }) => {
   const [t] = useTranslation();
   const [isEditNameOpened, setIsEditNameOpened] = useState(false);
   const [addCardPosition, setAddCardPosition] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(
+    () => localStorage.getItem(`list:${id}:collapsed`) === '1',
+  );
   const [scrollBottomState, scrollBottom] = useToggle();
   const [handleListMouseEnter, handleListMouseLeave] = useContext(BoardShortcutsContext);
 
@@ -107,6 +110,27 @@ const List = React.memo(({ id, index }) => {
       setIsEditNameOpened(true);
     }
   }, [list.isPersisted, canEdit]);
+
+  const handleToggleCollapse = useCallback(
+    (event) => {
+      if (event) {
+        event.stopPropagation();
+      }
+
+      setIsCollapsed((value) => {
+        const next = !value;
+
+        if (next) {
+          localStorage.setItem(`list:${id}:collapsed`, '1');
+        } else {
+          localStorage.removeItem(`list:${id}:collapsed`);
+        }
+
+        return next;
+      });
+    },
+    [id],
+  );
 
   const handleAddCardClick = useCallback(() => {
     setAddCardPosition(AddCardPositions.BOTTOM);
@@ -192,101 +216,144 @@ const List = React.memo(({ id, index }) => {
           {...draggableProps} // eslint-disable-line react/jsx-props-no-spreading
           data-drag-scroller
           ref={innerRef}
-          className={styles.innerWrapper}
+          className={classNames(styles.innerWrapper, isCollapsed && styles.innerWrapperCollapsed)}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleListMouseLeave}
         >
-          <div
-            ref={wrapperRef}
-            className={classNames(
-              styles.outerWrapper,
-              isFavoritesActive && styles.outerWrapperWithFavorites,
-              list.color && globalStyles[`background${upperFirst(camelCase(list.color))}Soft`],
-            )}
-            onTransitionEnd={handleWrapperTransitionEnd}
-          >
-            {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,
-                                         jsx-a11y/no-static-element-interactions */}
+          {isCollapsed ? (
             <div
-              {...dragHandleProps} // eslint-disable-line react/jsx-props-no-spreading
-              className={classNames(styles.header, canEdit && styles.headerEditable)}
-              onClick={handleHeaderClick}
+              ref={wrapperRef}
+              className={classNames(
+                styles.outerWrapper,
+                styles.outerWrapperCollapsed,
+                list.color && globalStyles[`background${upperFirst(camelCase(list.color))}Soft`],
+              )}
             >
-              {isEditNameOpened ? (
-                <EditName listId={id} onClose={handleEditNameClose} />
-              ) : (
-                <div className={styles.headerName}>
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,
+                                           jsx-a11y/no-static-element-interactions */}
+              <div
+                {...dragHandleProps} // eslint-disable-line react/jsx-props-no-spreading
+                className={styles.collapsedContent}
+                onClick={handleToggleCollapse}
+              >
+                <Button className={styles.collapsedButton} onClick={handleToggleCollapse}>
+                  <Icon fitted name="angle right" />
+                </Button>
+                <span className={styles.collapsedName}>
                   {list.color && (
                     <Icon
                       name="circle"
                       className={classNames(
-                        styles.headerNameColor,
+                        styles.collapsedNameColor,
                         globalStyles[`color${upperFirst(camelCase(list.color))}`],
                       )}
                     />
                   )}
                   {list.name}
-                </div>
+                </span>
+                <span className={styles.collapsedCount}>{cardIds.length}</span>
+              </div>
+            </div>
+          ) : (
+            <div
+              ref={wrapperRef}
+              className={classNames(
+                styles.outerWrapper,
+                isFavoritesActive && styles.outerWrapperWithFavorites,
+                list.color && globalStyles[`background${upperFirst(camelCase(list.color))}Soft`],
               )}
-              {list.type !== ListTypes.ACTIVE && (
-                <Icon
-                  name={ListTypeIcons[list.type]}
-                  className={classNames(
-                    styles.headerIcon,
-                    list.isPersisted && (canEdit || canArchiveCards) && styles.headerIconHidable,
-                  )}
-                />
-              )}
-              {list.isPersisted &&
-                (canEdit ? (
-                  <ActionsPopup listId={id} onNameEdit={handleNameEdit} onCardAdd={handleCardAdd}>
-                    <Button className={styles.headerButton}>
-                      <Icon fitted name="pencil" size="small" />
-                    </Button>
-                  </ActionsPopup>
+              onTransitionEnd={handleWrapperTransitionEnd}
+            >
+              {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,
+                                           jsx-a11y/no-static-element-interactions */}
+              <div
+                {...dragHandleProps} // eslint-disable-line react/jsx-props-no-spreading
+                className={classNames(
+                  styles.header,
+                  styles.headerCollapsible,
+                  canEdit && styles.headerEditable,
+                )}
+                onClick={handleHeaderClick}
+              >
+                <Button className={styles.collapseButton} onClick={handleToggleCollapse}>
+                  <Icon fitted name="angle left" />
+                </Button>
+                {isEditNameOpened ? (
+                  <EditName listId={id} onClose={handleEditNameClose} />
                 ) : (
-                  canArchiveCards && (
-                    <ArchiveCardsPopup listId={id}>
+                  <div className={styles.headerName}>
+                    {list.color && (
+                      <Icon
+                        name="circle"
+                        className={classNames(
+                          styles.headerNameColor,
+                          globalStyles[`color${upperFirst(camelCase(list.color))}`],
+                        )}
+                      />
+                    )}
+                    {list.name}
+                  </div>
+                )}
+                {list.type !== ListTypes.ACTIVE && (
+                  <Icon
+                    name={ListTypeIcons[list.type]}
+                    className={classNames(
+                      styles.headerIcon,
+                      list.isPersisted && (canEdit || canArchiveCards) && styles.headerIconHidable,
+                    )}
+                  />
+                )}
+                {list.isPersisted &&
+                  (canEdit ? (
+                    <ActionsPopup listId={id} onNameEdit={handleNameEdit} onCardAdd={handleCardAdd}>
                       <Button className={styles.headerButton}>
-                        <Icon fitted name="archive" size="small" />
+                        <Icon fitted name="pencil" size="small" />
                       </Button>
-                    </ArchiveCardsPopup>
-                  )
-                ))}
-            </div>
-            <div ref={cardsWrapperRef} className={styles.cardsInnerWrapper}>
-              <div className={styles.cardsOuterWrapper}>{cardsNode}</div>
-            </div>
-            {!addCardPosition && canAddCard && (
-              <div className={styles.addCardButtonWrapper}>
-                <button
-                  type="button"
-                  disabled={!list.isPersisted}
-                  className={classNames(
-                    styles.addCardButton,
-                    list.color &&
-                      globalStyles[`background${upperFirst(camelCase(list.color))}Soft`],
-                  )}
-                  onClick={handleAddCardClick}
-                >
-                  <PlusMathIcon className={styles.addCardButtonIcon} />
-                  <span className={styles.addCardButtonText}>
-                    {cardIds.length > 0 ? t('action.addAnotherCard') : t('action.addCard')}
-                  </span>
-                </button>
-                {clipboard && canPasteCard && (
+                    </ActionsPopup>
+                  ) : (
+                    canArchiveCards && (
+                      <ArchiveCardsPopup listId={id}>
+                        <Button className={styles.headerButton}>
+                          <Icon fitted name="archive" size="small" />
+                        </Button>
+                      </ArchiveCardsPopup>
+                    )
+                  ))}
+              </div>
+              <div ref={cardsWrapperRef} className={styles.cardsInnerWrapper}>
+                <div className={styles.cardsOuterWrapper}>{cardsNode}</div>
+              </div>
+              {!addCardPosition && canAddCard && (
+                <div className={styles.addCardButtonWrapper}>
                   <button
                     type="button"
                     disabled={!list.isPersisted}
-                    className={classNames(styles.addCardButton, styles.paste)}
-                    onClick={handlePasteCardClick}
+                    className={classNames(
+                      styles.addCardButton,
+                      list.color &&
+                        globalStyles[`background${upperFirst(camelCase(list.color))}Soft`],
+                    )}
+                    onClick={handleAddCardClick}
                   >
-                    <Icon name="paste" />
+                    <PlusMathIcon className={styles.addCardButtonIcon} />
+                    <span className={styles.addCardButtonText}>
+                      {cardIds.length > 0 ? t('action.addAnotherCard') : t('action.addCard')}
+                    </span>
                   </button>
-                )}
-              </div>
-            )}
-          </div>
+                  {clipboard && canPasteCard && (
+                    <button
+                      type="button"
+                      disabled={!list.isPersisted}
+                      className={classNames(styles.addCardButton, styles.paste)}
+                      onClick={handlePasteCardClick}
+                    >
+                      <Icon name="paste" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </Draggable>

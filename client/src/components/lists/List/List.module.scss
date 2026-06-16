@@ -176,4 +176,92 @@
   .outerWrapperWithFavorites {
     max-height: calc(100vh - 288px);
   }
+
+  .headerCollapsible {
+    padding-left: 36px;
+  }
+
+  .collapseButton {
+    background: none;
+    box-shadow: none;
+    color: #798d99;
+    left: 4px;
+    line-height: 32px;
+    margin: 0;
+    opacity: 0.7;
+    padding: 0;
+    position: absolute;
+    top: 4px;
+    width: 32px;
+
+    &:hover {
+      background: rgba(9, 30, 66, 0.13);
+      color: #516b7a;
+      opacity: 1;
+    }
+  }
+
+  .innerWrapperCollapsed {
+    width: 44px;
+  }
+
+  .outerWrapperCollapsed {
+    background: #dfe3e6;
+    border-radius: 3px;
+    cursor: pointer;
+    max-height: calc(100vh - 198px);
+    overflow: hidden;
+  }
+
+  .collapsedContent {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    outline: none;
+    padding: 4px 0 12px;
+  }
+
+  .collapsedButton {
+    background: none;
+    box-shadow: none;
+    color: #798d99;
+    flex: 0 0 auto;
+    line-height: 32px;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+
+    &:hover {
+      background: rgba(9, 30, 66, 0.13);
+      color: #516b7a;
+    }
+  }
+
+  .collapsedName {
+    color: #17394d;
+    font-weight: bold;
+    max-height: calc(100vh - 320px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+  }
+
+  .collapsedNameColor {
+    margin-top: 6px;
+  }
+
+  .collapsedCount {
+    background: rgba(9, 30, 66, 0.08);
+    border-radius: 10px;
+    color: #6b808c;
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: bold;
+    min-width: 20px;
+    padding: 2px 6px;
+    text-align: center;
+  }
 }
