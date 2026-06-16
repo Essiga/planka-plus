@@ -71,6 +71,7 @@
 
   .monthsRow {
     background: #fafbfc;
+    cursor: grab;
     height: 24px;
     position: relative;
   }
@@ -92,6 +93,7 @@
   .daysRow {
     background: #fafbfc;
     border-bottom: 1px solid #dfe3e6;
+    cursor: grab;
     display: flex;
     height: 24px;
   }
@@ -192,6 +194,7 @@
   .track {
     border-bottom: 1px solid #f0f1f3;
     box-sizing: border-box;
+    cursor: grab;
     flex: 0 0 auto;
     position: relative;
   }

@@ -215,6 +215,63 @@ const GanttContent = React.memo(() => {
     scrollRef.current.scrollLeft = Math.max(0, offset - 120);
   }, [chart, dayWidth]);
 
+  // Drag anywhere on the timeline background (not a bar or the name column) to pan the view
+  const panRef = useRef(null);
+
+  const handlePanMouseMove = useCallback((event) => {
+    const pan = panRef.current;
+    const container = scrollRef.current;
+    if (!pan || !container) {
+      return;
+    }
+
+    container.scrollLeft = pan.startScrollLeft - (event.clientX - pan.startX);
+    container.scrollTop = pan.startScrollTop - (event.clientY - pan.startY);
+  }, []);
+
+  const handlePanMouseUp = useCallback(() => {
+    document.removeEventListener('mousemove', handlePanMouseMove);
+    document.removeEventListener('mouseup', handlePanMouseUp);
+
+    const container = scrollRef.current;
+    if (container) {
+      container.style.cursor = '';
+      container.style.userSelect = '';
+    }
+
+    panRef.current = null;
+  }, [handlePanMouseMove]);
+
+  const handlePanMouseDown = useCallback(
+    (event) => {
+      const container = scrollRef.current;
+      if (event.button !== 0 || !container) {
+        return;
+      }
+
+      // Ignore presses on the sticky name column so row reordering still works
+      if (event.clientX - container.getBoundingClientRect().left < NAME_WIDTH) {
+        return;
+      }
+
+      event.preventDefault();
+
+      panRef.current = {
+        startX: event.clientX,
+        startY: event.clientY,
+        startScrollLeft: container.scrollLeft,
+        startScrollTop: container.scrollTop,
+      };
+
+      container.style.cursor = 'grabbing';
+      container.style.userSelect = 'none';
+
+      document.addEventListener('mousemove', handlePanMouseMove);
+      document.addEventListener('mouseup', handlePanMouseUp);
+    },
+    [handlePanMouseMove, handlePanMouseUp],
+  );
+
   const dayLineGradient = `repeating-linear-gradient(to right, transparent 0, transparent ${
     dayWidth - 1
   }px, #eef0f2 ${dayWidth - 1}px, #eef0f2 ${dayWidth}px)`;
@@ -239,7 +296,8 @@ const GanttContent = React.memo(() => {
       </div>
 
       {chart ? (
-        <div ref={scrollRef} className={styles.scroll}>
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+        <div ref={scrollRef} className={styles.scroll} onMouseDown={handlePanMouseDown}>
           <div className={styles.inner} style={{ width: NAME_WIDTH + totalWidth }}>
             <div className={styles.headerRow}>
               <div
