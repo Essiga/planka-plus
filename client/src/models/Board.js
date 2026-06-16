@@ -63,6 +63,7 @@ export default class extends BaseModel {
     }),
     filterUsers: many('User', 'filterBoards'),
     filterLabels: many('Label', 'filterBoards'),
+    filterEpics: many('Epic', 'filterBoards'),
   };
 
   static reducer({ type, payload }, Board) {
@@ -254,6 +255,14 @@ export default class extends BaseModel {
         Board.withId(payload.boardId).filterLabels.remove(payload.id);
 
         break;
+      case ActionTypes.EPIC_TO_BOARD_FILTER_ADD:
+        Board.withId(payload.boardId).filterEpics.add(payload.id);
+
+        break;
+      case ActionTypes.EPIC_FROM_BOARD_FILTER_REMOVE:
+        Board.withId(payload.boardId).filterEpics.remove(payload.id);
+
+        break;
       case ActionTypes.ACTIVITIES_IN_BOARD_FETCH:
         Board.withId(payload.boardId).update({
           isActivitiesFetching: true,
@@ -403,6 +412,14 @@ export default class extends BaseModel {
       });
     }
 
+    const filterEpicIds = this.filterEpics.toRefArray().map((epic) => epic.id);
+
+    if (filterEpicIds.length > 0) {
+      cardModels = cardModels.filter(
+        (cardModel) => cardModel.epicId && filterEpicIds.includes(cardModel.epicId),
+      );
+    }
+
     return cardModels;
   }
 
@@ -458,6 +475,7 @@ export default class extends BaseModel {
   deleteClearable() {
     this.filterUsers.clear();
     this.filterLabels.clear();
+    this.filterEpics.clear();
   }
 
   deleteRelated(exceptMemberUserId, soft) {

@@ -102,6 +102,18 @@ export function* handleEpicDelete(epic) {
   yield put(actions.handleEpicDelete(epic));
 }
 
+export function* addEpicToFilterInCurrentBoard(id) {
+  const { boardId } = yield select(selectors.selectPath);
+
+  yield put(actions.addEpicToBoardFilter(id, boardId));
+}
+
+export function* removeEpicFromFilterInCurrentBoard(id) {
+  const { boardId } = yield select(selectors.selectPath);
+
+  yield put(actions.removeEpicFromBoardFilter(id, boardId));
+}
+
 export default {
   createEpic,
   createEpicInCurrentBoard,
@@ -112,4 +124,6 @@ export default {
   handleEpicUpdate,
   deleteEpic,
   handleEpicDelete,
+  addEpicToFilterInCurrentBoard,
+  removeEpicFromFilterInCurrentBoard,
 };

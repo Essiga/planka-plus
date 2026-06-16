@@ -387,6 +387,14 @@ export default class extends BaseModel {
       });
     }
 
+    const filterEpicIds = this.board.filterEpics.toRefArray().map((epic) => epic.id);
+
+    if (filterEpicIds.length > 0) {
+      cardModels = cardModels.filter(
+        (cardModel) => cardModel.epicId && filterEpicIds.includes(cardModel.epicId),
+      );
+    }
+
     return cardModels;
   }
 

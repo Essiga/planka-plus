@@ -32,5 +32,11 @@ export default function* epicsWatchers() {
     takeEvery(EntryActionTypes.EPIC_DELETE_HANDLE, ({ payload: { epic } }) =>
       services.handleEpicDelete(epic),
     ),
+    takeEvery(EntryActionTypes.EPIC_TO_FILTER_IN_CURRENT_BOARD_ADD, ({ payload: { id } }) =>
+      services.addEpicToFilterInCurrentBoard(id),
+    ),
+    takeEvery(EntryActionTypes.EPIC_FROM_FILTER_IN_CURRENT_BOARD_REMOVE, ({ payload: { id } }) =>
+      services.removeEpicFromFilterInCurrentBoard(id),
+    ),
   ]);
 }

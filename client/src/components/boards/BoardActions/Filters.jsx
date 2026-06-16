@@ -20,6 +20,8 @@ import UserAvatar from '../../users/UserAvatar';
 import BoardMembershipsStep from '../../board-memberships/BoardMembershipsStep';
 import LabelChip from '../../labels/LabelChip';
 import LabelsStep from '../../labels/LabelsStep';
+import EpicChip from '../../epics/EpicChip';
+import EpicsFilterStep from '../../epics/EpicsFilterStep';
 
 import styles from './Filters.module.scss';
 
@@ -27,6 +29,7 @@ const Filters = React.memo(() => {
   const board = useSelector(selectors.selectCurrentBoard);
   const userIds = useSelector(selectors.selectFilterUserIdsForCurrentBoard);
   const labelIds = useSelector(selectors.selectFilterLabelIdsForCurrentBoard);
+  const epicIds = useSelector(selectors.selectFilterEpicIdsForCurrentBoard);
   const currentUserId = useSelector(selectors.selectCurrentUserId);
 
   const withCurrentUserSelector = useSelector(
@@ -109,6 +112,31 @@ const Filters = React.memo(() => {
     [dispatch],
   );
 
+  const handleEpicSelect = useCallback(
+    (epicId) => {
+      dispatch(entryActions.addEpicToFilterInCurrentBoard(epicId));
+    },
+    [dispatch],
+  );
+
+  const handleEpicDeselect = useCallback(
+    (epicId) => {
+      dispatch(entryActions.removeEpicFromFilterInCurrentBoard(epicId));
+    },
+    [dispatch],
+  );
+
+  const handleEpicClick = useCallback(
+    ({
+      currentTarget: {
+        dataset: { id: epicId },
+      },
+    }) => {
+      dispatch(entryActions.removeEpicFromFilterInCurrentBoard(epicId));
+    },
+    [dispatch],
+  );
+
   const handleSearchChange = useCallback(
     (_, { value }) => {
       setSearch(value);
@@ -144,6 +172,7 @@ const Filters = React.memo(() => {
 
   const BoardMembershipsPopup = usePopup(BoardMembershipsStep);
   const LabelsPopup = usePopup(LabelsStep);
+  const EpicsFilterPopup = usePopup(EpicsFilterStep);
 
   const isSearchActive = search || isSearchFocused;
 
@@ -189,6 +218,26 @@ const Filters = React.memo(() => {
         {labelIds.map((labelId) => (
           <span key={labelId} className={styles.filterItem}>
             <LabelChip id={labelId} size="small" onClick={handleLabelClick} />
+          </span>
+        ))}
+      </span>
+      <span className={styles.filter}>
+        <EpicsFilterPopup
+          currentIds={epicIds}
+          title="common.filterByEpics"
+          onSelect={handleEpicSelect}
+          onDeselect={handleEpicDeselect}
+        >
+          <button type="button" className={styles.filterButton}>
+            <span
+              className={styles.filterTitle}
+            >{`${t('common.epics', { defaultValue: 'Epics' })}:`}</span>
+            {epicIds.length === 0 && <span className={styles.filterLabel}>{t('common.all')}</span>}
+          </button>
+        </EpicsFilterPopup>
+        {epicIds.map((epicId) => (
+          <span key={epicId} className={styles.filterItem}>
+            <EpicChip id={epicId} size="small" onClick={handleEpicClick} />
           </span>
         ))}
       </span>

@@ -64,6 +64,20 @@ const handleEpicDelete = (epic) => ({
   },
 });
 
+const addEpicToFilterInCurrentBoard = (id) => ({
+  type: EntryActionTypes.EPIC_TO_FILTER_IN_CURRENT_BOARD_ADD,
+  payload: {
+    id,
+  },
+});
+
+const removeEpicFromFilterInCurrentBoard = (id) => ({
+  type: EntryActionTypes.EPIC_FROM_FILTER_IN_CURRENT_BOARD_REMOVE,
+  payload: {
+    id,
+  },
+});
+
 export default {
   createEpicInCurrentBoard,
   handleEpicCreate,
@@ -73,4 +87,6 @@ export default {
   handleEpicUpdate,
   deleteEpic,
   handleEpicDelete,
+  addEpicToFilterInCurrentBoard,
+  removeEpicFromFilterInCurrentBoard,
 };

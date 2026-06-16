@@ -481,6 +481,24 @@ export const selectFilterLabelIdsForCurrentBoard = createSelector(
   },
 );
 
+export const selectFilterEpicIdsForCurrentBoard = createSelector(
+  orm,
+  (state) => selectPath(state).boardId,
+  ({ Board }, id) => {
+    if (!id) {
+      return id;
+    }
+
+    const boardModel = Board.withId(id);
+
+    if (!boardModel) {
+      return boardModel;
+    }
+
+    return boardModel.filterEpics.toRefArray().map((epic) => epic.id);
+  },
+);
+
 export const selectIsBoardWithIdExists = createSelector(
   orm,
   (_, id) => id,
@@ -514,5 +532,6 @@ export default {
   selectActivityIdsForCurrentBoard,
   selectFilterUserIdsForCurrentBoard,
   selectFilterLabelIdsForCurrentBoard,
+  selectFilterEpicIdsForCurrentBoard,
   selectIsBoardWithIdExists,
 };

@@ -132,6 +132,12 @@ export default class extends BaseModel {
       });
     });
 
+    try {
+      this.board.filterEpics.remove(this.id);
+    } catch {
+      /* empty */
+    }
+
     this.comments.delete();
   }
 
