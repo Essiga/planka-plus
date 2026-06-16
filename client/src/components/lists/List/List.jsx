@@ -253,6 +253,24 @@ const List = React.memo(({ id, index }) => {
                 </span>
                 <span className={styles.collapsedCount}>{cardIds.length}</span>
               </div>
+              <Droppable
+                droppableId={`list:${id}`}
+                type={DroppableTypes.CARD}
+                isDropDisabled={!list.isPersisted || !canDropCard}
+              >
+                {(dropzoneProvided, dropzoneSnapshot) => (
+                  <div
+                    {...dropzoneProvided.droppableProps} // eslint-disable-line react/jsx-props-no-spreading
+                    ref={dropzoneProvided.innerRef}
+                    className={classNames(
+                      styles.collapsedDropzone,
+                      dropzoneSnapshot.isDraggingOver && styles.collapsedDropzoneActive,
+                    )}
+                  >
+                    {dropzoneProvided.placeholder}
+                  </div>
+                )}
+              </Droppable>
             </div>
           ) : (
             <div
