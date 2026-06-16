@@ -48,6 +48,9 @@ export default function* cardsWatchers() {
     takeEvery(EntryActionTypes.CARD_IN_EPIC_MOVE, ({ payload: { id, index } }) =>
       services.moveCardInEpic(id, index),
     ),
+    takeEvery(EntryActionTypes.CARD_IN_EPIC_CREATE, ({ payload: { epicId, name } }) =>
+      services.createCardInEpic(epicId, name),
+    ),
     takeEvery(EntryActionTypes.CARD_TO_ARCHIVE_MOVE, ({ payload: { id } }) =>
       services.moveCardToArchive(id),
     ),

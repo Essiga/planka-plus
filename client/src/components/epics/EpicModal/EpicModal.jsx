@@ -11,14 +11,19 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Dropdown, Icon, Input } from 'semantic-ui-react';
+import { Button, Comment as SuiComment, Dropdown, Grid, Icon } from 'semantic-ui-react';
 import { push } from '../../../lib/redux-router';
+import { useDidUpdate } from '../../../lib/hooks';
 
 import selectors from '../../../selectors';
 import entryActions from '../../../entry-actions';
 import { useClosableModal } from '../../../hooks';
+import { isUsableMarkdownElement } from '../../../utils/element-helpers';
 import Paths from '../../../constants/Paths';
 import LabelColors from '../../../constants/LabelColors';
+import NameField from '../../cards/CardModal/NameField';
+import EditMarkdown from '../../common/EditMarkdown';
+import ExpandableMarkdown from '../../common/ExpandableMarkdown';
 import Comment from './Comment';
 
 import styles from './EpicModal.module.scss';
@@ -40,37 +45,30 @@ const EpicModal = React.memo(({ id, canEdit, onClose }) => {
   const dispatch = useDispatch();
   const [t] = useTranslation();
 
-  const [name, setName] = useState(epic ? epic.name || '' : '');
-  const [description, setDescription] = useState(epic ? epic.description || '' : '');
+  const [descriptionDraft, setDescriptionDraft] = useState(null);
+  const [isEditDescriptionOpened, setIsEditDescriptionOpened] = useState(false);
   const [commentText, setCommentText] = useState('');
+
+  const [ClosableModal, , , , setIsClosableActive] = useClosableModal();
 
   useEffect(() => {
     dispatch(entryActions.fetchEpicComments(id));
   }, [id, dispatch]);
 
+  useDidUpdate(() => {
+    setIsClosableActive(isEditDescriptionOpened);
+  }, [isEditDescriptionOpened]);
+
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
 
-  const handleNameBlur = useCallback(() => {
-    const cleanName = name.trim();
-
-    if (cleanName === (epic.name || '')) {
-      return;
-    }
-
-    dispatch(entryActions.updateEpic(id, { name: cleanName || null }));
-  }, [id, name, epic, dispatch]);
-
-  const handleDescriptionBlur = useCallback(() => {
-    const cleanDescription = description.trim();
-
-    if (cleanDescription === (epic.description || '')) {
-      return;
-    }
-
-    dispatch(entryActions.updateEpic(id, { description: cleanDescription || null }));
-  }, [id, description, epic, dispatch]);
+  const handleNameUpdate = useCallback(
+    (name) => {
+      dispatch(entryActions.updateEpic(id, { name: name || null }));
+    },
+    [id, dispatch],
+  );
 
   const handleColorClick = useCallback(
     (color) => {
@@ -95,30 +93,32 @@ const EpicModal = React.memo(({ id, canEdit, onClose }) => {
     [id, dispatch],
   );
 
+  const handleDescriptionUpdate = useCallback(
+    (description) => {
+      dispatch(entryActions.updateEpic(id, { description }));
+    },
+    [id, dispatch],
+  );
+
+  const handleEditDescriptionClick = useCallback((event) => {
+    if (window.getSelection().toString() || isUsableMarkdownElement(event.target)) {
+      return;
+    }
+
+    setIsEditDescriptionOpened(true);
+  }, []);
+
+  const handleEditDescriptionClose = useCallback((nextDescriptionDraft) => {
+    setDescriptionDraft(nextDescriptionDraft);
+    setIsEditDescriptionOpened(false);
+  }, []);
+
   const handleCardClick = useCallback(
     (cardId) => {
       onClose();
       dispatch(push(Paths.CARDS.replace(':id', cardId)));
     },
     [dispatch, onClose],
-  );
-
-  const handleCardAdd = useCallback(
-    (_, { value }) => {
-      if (!value) {
-        return;
-      }
-
-      dispatch(entryActions.updateCard(value, { epicId: id }));
-    },
-    [id, dispatch],
-  );
-
-  const handleCardRemove = useCallback(
-    (cardId) => {
-      dispatch(entryActions.updateCard(cardId, { epicId: null }));
-    },
-    [dispatch],
   );
 
   const availableCardOptions = useMemo(
@@ -131,6 +131,38 @@ const EpicModal = React.memo(({ id, canEdit, onClose }) => {
           text: card.name,
         })),
     [boardCards, id],
+  );
+
+  const handleCardAdd = useCallback(
+    (_, { value }) => {
+      // Only assign when the selected value is an existing card (not a typed addition,
+      // which is handled by onAddItem -> handleCardCreate)
+      if (!value || !availableCardOptions.some((option) => option.value === value)) {
+        return;
+      }
+
+      dispatch(entryActions.updateCard(value, { epicId: id }));
+    },
+    [id, dispatch, availableCardOptions],
+  );
+
+  const handleCardCreate = useCallback(
+    (_, { value }) => {
+      const cleanName = value.trim();
+      if (!cleanName) {
+        return;
+      }
+
+      dispatch(entryActions.createCardInEpic(id, cleanName));
+    },
+    [id, dispatch],
+  );
+
+  const handleCardRemove = useCallback(
+    (cardId) => {
+      dispatch(entryActions.updateCard(cardId, { epicId: null }));
+    },
+    [dispatch],
   );
 
   const handleDelete = useCallback(() => {
@@ -153,148 +185,214 @@ const EpicModal = React.memo(({ id, canEdit, onClose }) => {
     [id, commentText, dispatch],
   );
 
-  const [ClosableModal] = useClosableModal();
-
   if (!epic) {
     return null;
   }
 
   return (
-    <ClosableModal closeIcon size="small" centered={false} onClose={handleClose}>
-      <ClosableModal.Header>
-        <Icon name="bookmark" /> {epic.name || t('common.noName', { defaultValue: 'No name' })}
-      </ClosableModal.Header>
-      <ClosableModal.Content>
-        {canEdit && (
-          <>
-            <div className={styles.fieldLabel}>{t('common.name', { defaultValue: 'Name' })}</div>
-            <Input
-              fluid
-              value={name}
-              onChange={(_, { value }) => setName(value)}
-              onBlur={handleNameBlur}
-            />
-
-            <div className={styles.fieldLabel}>{t('common.color', { defaultValue: 'Color' })}</div>
-            <div className={styles.colors}>
-              {LabelColors.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  aria-label={color}
-                  className={classNames(
-                    styles.color,
-                    epic.color === color && styles.colorSelected,
-                    globalStyles[`background${upperFirst(camelCase(color))}`],
+    <ClosableModal closeIcon centered={false} className={styles.wrapper} onClose={handleClose}>
+      <Grid className={styles.gridWrapper}>
+        <Grid.Row className={styles.headerPadding}>
+          <Grid.Column width={16} className={styles.headerPadding}>
+            <div className={styles.headerWrapper}>
+              <Icon name="bookmark" className={styles.moduleIcon} />
+              <div className={styles.headerTitleWrapper}>
+                {canEdit ? (
+                  <NameField defaultValue={epic.name || ''} onUpdate={handleNameUpdate} />
+                ) : (
+                  <div className={styles.headerTitle}>
+                    {epic.name || t('common.noName', { defaultValue: 'No name' })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Grid.Column>
+        </Grid.Row>
+        <Grid.Row className={styles.modalPadding}>
+          <Grid.Column width={12} className={styles.contentPadding}>
+            <div className={classNames(styles.contentModule, styles.contentModuleDescription)}>
+              <div className={styles.moduleWrapper}>
+                <Icon name="align left" className={styles.moduleIcon} />
+                <div className={styles.moduleHeader}>
+                  {t('common.description', { defaultValue: 'Description' })}
+                  {canEdit && !isEditDescriptionOpened && descriptionDraft && (
+                    <span className={styles.draftChip}>
+                      {t('common.unsavedChanges', { defaultValue: 'Unsaved changes' })}
+                    </span>
                   )}
-                  onClick={() => handleColorClick(color)}
-                />
-              ))}
-            </div>
-
-            <div className={styles.dates}>
-              <div className={styles.dateField}>
-                <div className={styles.fieldLabel}>
-                  {t('common.startDate', { defaultValue: 'Start date' })}
                 </div>
-                <input
-                  type="date"
-                  className={styles.dateInput}
-                  value={toInputDate(epic.startDate)}
-                  onChange={handleStartDateChange}
-                />
+                {canEdit ? (
+                  <>
+                    {isEditDescriptionOpened && (
+                      <EditMarkdown
+                        defaultValue={epic.description}
+                        draftValue={descriptionDraft}
+                        onUpdate={handleDescriptionUpdate}
+                        onClose={handleEditDescriptionClose}
+                      />
+                    )}
+                    {!isEditDescriptionOpened &&
+                      (epic.description ? (
+                        /* eslint-disable-next-line jsx-a11y/click-events-have-key-events,
+                                                  jsx-a11y/no-static-element-interactions */
+                        <div className={styles.cursorPointer} onClick={handleEditDescriptionClick}>
+                          <Button className={styles.editButton}>
+                            <Icon fitted name="pencil" size="small" />
+                          </Button>
+                          <ExpandableMarkdown>{epic.description}</ExpandableMarkdown>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.descriptionButton}
+                          onClick={handleEditDescriptionClick}
+                        >
+                          <span className={styles.descriptionButtonText}>
+                            {t('action.addMoreDetailedDescription', {
+                              defaultValue: 'Add a more detailed description...',
+                            })}
+                          </span>
+                        </button>
+                      ))}
+                  </>
+                ) : (
+                  epic.description && <ExpandableMarkdown>{epic.description}</ExpandableMarkdown>
+                )}
               </div>
-              <div className={styles.dateField}>
-                <div className={styles.fieldLabel}>
-                  {t('common.endDate', { defaultValue: 'End date' })}
+            </div>
+
+            <div className={styles.contentModule}>
+              <div className={styles.moduleWrapper}>
+                <Icon name="check square outline" className={styles.moduleIcon} />
+                <div className={styles.moduleHeader}>
+                  {t('common.cards', { defaultValue: 'Cards' })}
                 </div>
-                <input
-                  type="date"
-                  className={styles.dateInput}
-                  value={toInputDate(epic.endDate)}
-                  onChange={handleEndDateChange}
-                />
+                {canEdit && (
+                  <Dropdown
+                    fluid
+                    search
+                    selection
+                    allowAdditions
+                    selectOnBlur={false}
+                    selectOnNavigation={false}
+                    value=""
+                    options={availableCardOptions}
+                    placeholder={t('common.addCardToEpic', { defaultValue: 'Add a card...' })}
+                    noResultsMessage={t('common.noCards', { defaultValue: 'No cards' })}
+                    additionLabel={`${t('action.createCard', { defaultValue: 'Create card' })}: `}
+                    onAddItem={handleCardCreate}
+                    onChange={handleCardAdd}
+                  />
+                )}
+                {cardIds.length === 0 ? (
+                  <div className={styles.empty}>
+                    {t('common.noCardsInEpic', { defaultValue: 'No cards yet' })}
+                  </div>
+                ) : (
+                  <ul className={styles.cardList}>
+                    {cardIds.map((cardId) => (
+                      <CardItem
+                        key={cardId}
+                        id={cardId}
+                        canEdit={canEdit}
+                        selectCardById={selectCardById}
+                        onClick={handleCardClick}
+                        onRemove={handleCardRemove}
+                      />
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
 
-            <div className={styles.fieldLabel}>
-              {t('common.description', { defaultValue: 'Description' })}
+            <div className={styles.contentModule}>
+              <div className={styles.moduleWrapper}>
+                <Icon name="comment outline" className={styles.moduleIcon} />
+                <div className={styles.moduleHeader}>
+                  {t('common.comments', { defaultValue: 'Comments' })}
+                </div>
+                <form className={styles.commentForm} onSubmit={handleCommentSubmit}>
+                  <textarea
+                    className={styles.commentTextarea}
+                    value={commentText}
+                    placeholder={t('common.writeComment', { defaultValue: 'Write a comment...' })}
+                    onChange={(event) => setCommentText(event.target.value)}
+                  />
+                  <div>
+                    <Button
+                      positive
+                      type="submit"
+                      content={t('action.addComment', { defaultValue: 'Add comment' })}
+                    />
+                  </div>
+                </form>
+                <SuiComment.Group>
+                  {commentIds.map((commentId) => (
+                    <Comment key={commentId} id={commentId} canEdit={canEdit} />
+                  ))}
+                </SuiComment.Group>
+              </div>
             </div>
-            <textarea
-              className={styles.textarea}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              onBlur={handleDescriptionBlur}
-            />
-          </>
-        )}
+          </Grid.Column>
+          <Grid.Column width={4} className={styles.sidebarPadding}>
+            {canEdit && (
+              <div className={styles.sidebarSection}>
+                <div className={styles.text}>{t('common.color', { defaultValue: 'Color' })}</div>
+                <div className={styles.colors}>
+                  {LabelColors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      aria-label={color}
+                      className={classNames(
+                        styles.color,
+                        epic.color === color && styles.colorSelected,
+                        globalStyles[`background${upperFirst(camelCase(color))}`],
+                      )}
+                      onClick={() => handleColorClick(color)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-        <div className={styles.fieldLabel}>{t('common.cards', { defaultValue: 'Cards' })}</div>
-        {canEdit && (
-          <Dropdown
-            fluid
-            search
-            selection
-            selectOnBlur={false}
-            selectOnNavigation={false}
-            value=""
-            options={availableCardOptions}
-            placeholder={t('common.addCardToEpic', { defaultValue: 'Add a card...' })}
-            noResultsMessage={t('common.noCards', { defaultValue: 'No cards' })}
-            onChange={handleCardAdd}
-          />
-        )}
-        {cardIds.length === 0 ? (
-          <div className={styles.empty}>
-            {t('common.noCardsInEpic', { defaultValue: 'No cards yet' })}
-          </div>
-        ) : (
-          <ul className={styles.cardList}>
-            {cardIds.map((cardId) => (
-              <CardItem
-                key={cardId}
-                id={cardId}
-                canEdit={canEdit}
-                selectCardById={selectCardById}
-                onClick={handleCardClick}
-                onRemove={handleCardRemove}
+            <div className={styles.sidebarSection}>
+              <div className={styles.text}>
+                {t('common.startDate', { defaultValue: 'Start date' })}
+              </div>
+              <input
+                type="date"
+                disabled={!canEdit}
+                className={styles.dateInput}
+                value={toInputDate(epic.startDate)}
+                onChange={handleStartDateChange}
               />
-            ))}
-          </ul>
-        )}
+            </div>
 
-        <div className={styles.fieldLabel}>
-          {t('common.comments', { defaultValue: 'Comments' })}
-        </div>
-        <form className={styles.commentForm} onSubmit={handleCommentSubmit}>
-          <textarea
-            className={styles.textarea}
-            value={commentText}
-            placeholder={t('common.writeComment', { defaultValue: 'Write a comment...' })}
-            onChange={(event) => setCommentText(event.target.value)}
-          />
-          <div>
-            <Button
-              positive
-              type="submit"
-              content={t('action.addComment', { defaultValue: 'Add comment' })}
-            />
-          </div>
-        </form>
-        {commentIds.map((commentId) => (
-          <Comment key={commentId} id={commentId} />
-        ))}
+            <div className={styles.sidebarSection}>
+              <div className={styles.text}>{t('common.endDate', { defaultValue: 'End date' })}</div>
+              <input
+                type="date"
+                disabled={!canEdit}
+                className={styles.dateInput}
+                value={toInputDate(epic.endDate)}
+                onChange={handleEndDateChange}
+              />
+            </div>
 
-        {canEdit && (
-          <div className={styles.deleteButton}>
-            <Button
-              negative
-              content={t('action.deleteEpic', { defaultValue: 'Delete epic' })}
-              onClick={handleDelete}
-            />
-          </div>
-        )}
-      </ClosableModal.Content>
+            {canEdit && (
+              <div className={styles.sidebarSection}>
+                <Button
+                  fluid
+                  negative
+                  content={t('action.deleteEpic', { defaultValue: 'Delete epic' })}
+                  onClick={handleDelete}
+                />
+              </div>
+            )}
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
     </ClosableModal>
   );
 });

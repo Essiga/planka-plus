@@ -45,6 +45,14 @@ const createCardInCurrentList = (data, autoOpen = false) => ({
   },
 });
 
+const createCardInEpic = (epicId, name) => ({
+  type: EntryActionTypes.CARD_IN_EPIC_CREATE,
+  payload: {
+    epicId,
+    name,
+  },
+});
+
 const handleCardCreate = (card) => ({
   type: EntryActionTypes.CARD_CREATE_HANDLE,
   payload: {
@@ -221,6 +229,7 @@ export default {
   createCard,
   createCardInCurrentContext,
   createCardInCurrentList,
+  createCardInEpic,
   handleCardCreate,
   updateCard,
   updateCurrentCard,

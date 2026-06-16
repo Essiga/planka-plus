@@ -4,14 +4,186 @@
  */
 
 :global(#app) {
-  .fieldLabel {
+  @mixin smallScreen {
+    margin: 1rem auto;
+    width: 95%;
+  }
+
+  /* Modal sizing (mirrors the card modal) */
+  .wrapper {
+    margin: 2rem auto;
+    width: 880px;
+
+    @media (width < 926px) {
+      @include smallScreen;
+    }
+  }
+
+  .gridWrapper {
+    background: #f5f6f7;
+    border-radius: 4px;
+    margin: 0;
+  }
+
+  /* Header (mirrors the card modal) */
+  .headerPadding {
+    padding: 0;
+  }
+
+  .headerWrapper {
+    margin: 12px 48px 12px 56px;
+    position: relative;
+  }
+
+  .headerTitleWrapper {
+    margin: 4px 0;
+    padding: 6px 0 0;
+  }
+
+  .headerTitle {
+    color: #17394d;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 24px;
+    word-wrap: break-word;
+  }
+
+  /* Content + modules (mirrors the card modal) */
+  .modalPadding {
+    padding: 0;
+  }
+
+  .contentPadding {
+    padding: 8px 24px 16px 16px;
+
+    @media only screen and (width < 768px) {
+      padding-right: 16px;
+      width: 100% !important;
+    }
+  }
+
+  .sidebarPadding {
+    padding: 8px 16px 16px 8px;
+
+    @media only screen and (width < 768px) {
+      padding-left: 16px;
+      width: 100% !important;
+    }
+  }
+
+  .sidebarSection {
+    margin-bottom: 20px;
+  }
+
+  .text {
     color: #6b808c;
     font-size: 12px;
     font-weight: bold;
-    margin: 16px 0 6px;
+    letter-spacing: 0.3px;
+    line-height: 20px;
+    margin: 0 0 6px;
     text-transform: uppercase;
   }
 
+  .contentModule {
+    margin-bottom: 24px;
+  }
+
+  .contentModuleDescription:hover {
+    .editButton {
+      opacity: 1;
+    }
+  }
+
+  .moduleWrapper {
+    margin: 0 0 0 40px;
+    position: relative;
+  }
+
+  .moduleIcon {
+    color: #17394d;
+    font-size: 17px;
+    height: 32px;
+    left: -40px;
+    line-height: 32px;
+    margin-right: 0;
+    position: absolute;
+    top: 2px;
+    width: 32px;
+  }
+
+  .moduleHeader {
+    align-items: center;
+    color: #17394d;
+    display: flex;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1.5;
+    margin: 0 0 4px;
+    padding: 6px 0;
+    word-wrap: break-word;
+  }
+
+  .cursorPointer {
+    cursor: pointer;
+    position: relative;
+  }
+
+  .editButton {
+    background: transparent;
+    box-shadow: none;
+    line-height: 28px;
+    margin: 0;
+    min-height: auto;
+    opacity: 0;
+    padding: 0;
+    position: absolute;
+    right: 0;
+    top: 4px;
+    width: 28px;
+
+    &:hover {
+      background: rgba(9, 30, 66, 0.08);
+    }
+  }
+
+  .descriptionButton {
+    background: rgba(9, 30, 66, 0.04);
+    border: none;
+    border-radius: 3px;
+    color: #6b808c;
+    cursor: pointer;
+    display: block;
+    min-height: 54px;
+    outline: none;
+    padding: 8px 12px;
+    position: relative;
+    text-align: left;
+    text-decoration: none;
+    width: 100%;
+
+    &:hover {
+      background: rgba(9, 30, 66, 0.08);
+      color: #092d42;
+    }
+  }
+
+  .descriptionButtonText {
+    position: absolute;
+    top: 12px;
+  }
+
+  .draftChip {
+    background: #f1eee2;
+    border-radius: 3px;
+    color: rgba(0, 0, 0, 0.87);
+    font-size: 14px;
+    font-weight: normal;
+    margin-left: 8px;
+    padding: 2px 8px;
+  }
+
+  /* Attributes */
   .colors {
     display: flex;
     flex-wrap: wrap;
@@ -39,34 +211,40 @@
     flex: 1 1 0;
   }
 
+  .dateLabel {
+    color: #6b808c;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
   .dateInput {
+    background: #fff;
     border: 1px solid rgba(34, 36, 38, 0.15);
     border-radius: 4px;
     padding: 8px;
     width: 100%;
   }
 
-  .textarea {
-    border: 1px solid rgba(34, 36, 38, 0.15);
-    border-radius: 4px;
-    min-height: 80px;
-    padding: 8px;
-    resize: vertical;
-    width: 100%;
-  }
-
+  /* Cards */
   .cardList {
     list-style: none;
-    margin: 0;
+    margin: 8px 0 0;
     padding: 0;
   }
 
   .cardItem {
     align-items: center;
+    background: #fff;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 rgba(9, 30, 66, 0.12);
     cursor: pointer;
     display: flex;
     gap: 8px;
-    padding: 6px 4px;
+    margin-bottom: 4px;
+    padding: 8px 10px;
   }
 
   .cardItem:hover {
@@ -83,11 +261,21 @@
     font-style: italic;
   }
 
+  /* Comments */
   .commentForm {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
+  }
+
+  .commentTextarea {
+    border: 1px solid rgba(34, 36, 38, 0.15);
+    border-radius: 4px;
+    min-height: 60px;
+    padding: 8px;
+    resize: vertical;
+    width: 100%;
   }
 
   .comment {
@@ -108,6 +296,6 @@
   }
 
   .deleteButton {
-    margin-top: 24px;
+    margin-top: 8px;
   }
 }

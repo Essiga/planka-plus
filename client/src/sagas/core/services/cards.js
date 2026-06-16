@@ -183,6 +183,28 @@ export function* createCardInCurrentList(data, autoOpen) {
   yield call(createCard, currentListId, data, undefined, autoOpen);
 }
 
+export function* createCardInEpic(epicId, name) {
+  const firstKanbanListId = yield select(selectors.selectFirstKanbanListId);
+
+  if (!firstKanbanListId) {
+    return;
+  }
+
+  const { defaultCardType } = yield select(selectors.selectCurrentBoard);
+
+  yield call(
+    createCard,
+    firstKanbanListId,
+    {
+      type: defaultCardType,
+      name,
+      epicId,
+    },
+    undefined,
+    false,
+  );
+}
+
 export function* handleCardCreate(card) {
   let users;
   let cardMemberships;
@@ -774,6 +796,7 @@ export default {
   createCard,
   createCardInCurrentContext,
   createCardInCurrentList,
+  createCardInEpic,
   handleCardCreate,
   updateCard,
   updateCurrentCard,

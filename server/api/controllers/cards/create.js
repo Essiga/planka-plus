@@ -113,6 +113,9 @@ const Errors = {
   LIST_NOT_FOUND: {
     listNotFound: 'List not found',
   },
+  EPIC_NOT_FOUND: {
+    epicNotFound: 'Epic not found',
+  },
   POSITION_MUST_BE_PRESENT: {
     positionMustBePresent: 'Position must be present',
   },
@@ -157,6 +160,10 @@ module.exports = {
       type: 'json',
       custom: isStopwatch,
     },
+    epicId: {
+      ...idInput,
+      allowNull: true,
+    },
   },
 
   exits: {
@@ -164,6 +171,9 @@ module.exports = {
       responseType: 'forbidden',
     },
     listNotFound: {
+      responseType: 'notFound',
+    },
+    epicNotFound: {
       responseType: 'notFound',
     },
     positionMustBePresent: {
@@ -200,6 +210,23 @@ module.exports = {
       'isDueCompleted',
       'stopwatch',
     ]);
+
+    if (inputs.epicId) {
+      const epic = await Epic.qm.getOneById(inputs.epicId, {
+        boardId: board.id,
+      });
+
+      if (!epic) {
+        throw Errors.EPIC_NOT_FOUND;
+      }
+
+      const epicCards = await Card.qm.getByEpicId(epic.id);
+      const lastEpicCard = epicCards[epicCards.length - 1];
+
+      values.epicId = epic.id;
+      values.epicPosition =
+        (lastEpicCard && lastEpicCard.epicPosition ? lastEpicCard.epicPosition : 0) + 2 ** 16;
+    }
 
     const card = await sails.helpers.cards.createOne
       .with({
