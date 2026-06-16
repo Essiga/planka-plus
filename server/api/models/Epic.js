@@ -155,7 +155,8 @@ module.exports = {
     },
     color: {
       type: 'string',
-      isIn: COLORS,
+      // Accept either a named palette color or a custom hex value (#rrggbb)
+      custom: (value) => COLORS.includes(value) || /^#[0-9a-fA-F]{6}$/.test(value),
       required: true,
     },
     startDate: {

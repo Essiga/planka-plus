@@ -3,8 +3,6 @@
  * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
  */
 
-import upperFirst from 'lodash/upperFirst';
-import camelCase from 'lodash/camelCase';
 import { format } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
@@ -18,9 +16,9 @@ import { push } from '../../../../lib/redux-router';
 import selectors from '../../../../selectors';
 import Paths from '../../../../constants/Paths';
 import DroppableTypes from '../../../../constants/DroppableTypes';
+import { getEpicColorClassName, getEpicColorStyle } from '../../../../utils/epic-color';
 
 import styles from './BacklogContent.module.scss';
-import globalStyles from '../../../../styles.module.scss';
 
 const EpicItem = React.memo(({ id, index, canEdit, draggable, onOpen }) => {
   const selectEpicById = useMemo(() => selectors.makeSelectEpicById(), []);
@@ -94,10 +92,8 @@ const EpicItem = React.memo(({ id, index, canEdit, draggable, onOpen }) => {
             <div className={styles.epicHeaderMain} onClick={handleToggle}>
               <Icon fitted name={isExpanded ? 'caret down' : 'caret right'} />
               <span
-                className={classNames(
-                  styles.epicColor,
-                  globalStyles[`background${upperFirst(camelCase(epic.color))}`],
-                )}
+                style={getEpicColorStyle(epic.color)}
+                className={classNames(styles.epicColor, getEpicColorClassName(epic.color))}
               />
               <span className={classNames(styles.epicName, !epic.name && styles.epicNameless)}>
                 {epic.name || t('common.noName', { defaultValue: 'No name' })}

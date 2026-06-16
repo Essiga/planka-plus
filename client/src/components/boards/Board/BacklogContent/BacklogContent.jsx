@@ -15,7 +15,7 @@ import entryActions from '../../../../entry-actions';
 import parseDndId from '../../../../utils/parse-dnd-id';
 import DroppableTypes from '../../../../constants/DroppableTypes';
 import { BoardMembershipRoles } from '../../../../constants/Enums';
-import LabelColors from '../../../../constants/LabelColors';
+import EpicColors from '../../../../constants/EpicColors';
 import EpicItem from './EpicItem';
 import EpicModal from '../../../epics/EpicModal';
 
@@ -114,7 +114,7 @@ const BacklogContent = React.memo(() => {
       dispatch(
         entryActions.createEpicInCurrentBoard({
           name: cleanName,
-          color: LabelColors[epics.length % LabelColors.length],
+          color: EpicColors[epics.length % EpicColors.length],
         }),
       );
 

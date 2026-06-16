@@ -4,7 +4,6 @@
  */
 
 import upperFirst from 'lodash/upperFirst';
-import camelCase from 'lodash/camelCase';
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -12,9 +11,9 @@ import { useSelector } from 'react-redux';
 import { Icon } from 'semantic-ui-react';
 
 import selectors from '../../../selectors';
+import { getEpicColorClassName, getEpicColorStyle } from '../../../utils/epic-color';
 
 import styles from './EpicChip.module.scss';
-import globalStyles from '../../../styles.module.scss';
 
 const Sizes = {
   TINY: 'tiny',
@@ -34,11 +33,12 @@ const EpicChip = React.memo(({ id, size, onClick }) => {
   const contentNode = (
     <span
       title={epic.name || undefined}
+      style={getEpicColorStyle(epic.color)}
       className={classNames(
         styles.wrapper,
         styles[`wrapper${upperFirst(size)}`],
         onClick && styles.wrapperHoverable,
-        globalStyles[`background${upperFirst(camelCase(epic.color))}`],
+        getEpicColorClassName(epic.color),
       )}
     >
       <Icon name="bookmark" className={styles.icon} />

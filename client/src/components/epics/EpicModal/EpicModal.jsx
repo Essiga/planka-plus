@@ -3,8 +3,6 @@
  * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
  */
 
-import upperFirst from 'lodash/upperFirst';
-import camelCase from 'lodash/camelCase';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -20,14 +18,14 @@ import entryActions from '../../../entry-actions';
 import { useClosableModal } from '../../../hooks';
 import { isUsableMarkdownElement } from '../../../utils/element-helpers';
 import Paths from '../../../constants/Paths';
-import LabelColors from '../../../constants/LabelColors';
+import EpicColors from '../../../constants/EpicColors';
+import { getEpicColorClassName, getEpicColorStyle, isHexColor } from '../../../utils/epic-color';
 import NameField from '../../cards/CardModal/NameField';
 import EditMarkdown from '../../common/EditMarkdown';
 import ExpandableMarkdown from '../../common/ExpandableMarkdown';
 import Comment from './Comment';
 
 import styles from './EpicModal.module.scss';
-import globalStyles from '../../../styles.module.scss';
 
 const EpicModal = React.memo(({ id, canEdit, onClose }) => {
   const selectEpicById = useMemo(() => selectors.makeSelectEpicById(), []);
@@ -335,19 +333,40 @@ const EpicModal = React.memo(({ id, canEdit, onClose }) => {
               <div className={styles.sidebarSection}>
                 <div className={styles.text}>{t('common.color', { defaultValue: 'Color' })}</div>
                 <div className={styles.colors}>
-                  {LabelColors.map((color) => (
+                  {EpicColors.map((color) => (
                     <button
                       key={color}
                       type="button"
                       aria-label={color}
+                      style={getEpicColorStyle(color)}
                       className={classNames(
                         styles.color,
                         epic.color === color && styles.colorSelected,
-                        globalStyles[`background${upperFirst(camelCase(color))}`],
+                        getEpicColorClassName(color),
                       )}
                       onClick={() => handleColorClick(color)}
                     />
                   ))}
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+                  <label
+                    className={classNames(
+                      styles.color,
+                      styles.colorCustom,
+                      isHexColor(epic.color) && styles.colorSelected,
+                    )}
+                    style={isHexColor(epic.color) ? { background: epic.color } : undefined}
+                    title={t('common.customColor', { defaultValue: 'Custom color' })}
+                  >
+                    {!isHexColor(epic.color) && (
+                      <Icon fitted name="eye dropper" className={styles.colorCustomIcon} />
+                    )}
+                    <input
+                      type="color"
+                      className={styles.colorCustomInput}
+                      value={isHexColor(epic.color) ? epic.color : '#cccccc'}
+                      onChange={(event) => handleColorClick(event.target.value)}
+                    />
+                  </label>
                 </div>
               </div>
             )}

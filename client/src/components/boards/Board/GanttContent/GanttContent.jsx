@@ -3,8 +3,6 @@
  * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
  */
 
-import upperFirst from 'lodash/upperFirst';
-import camelCase from 'lodash/camelCase';
 import {
   addDays,
   differenceInCalendarDays,
@@ -26,6 +24,7 @@ import { Button, Icon } from 'semantic-ui-react';
 import selectors from '../../../../selectors';
 import entryActions from '../../../../entry-actions';
 import { BoardMembershipRoles } from '../../../../constants/Enums';
+import { getEpicColorClassName, getEpicColorStyle } from '../../../../utils/epic-color';
 import EpicModal from '../../../epics/EpicModal';
 
 import styles from './GanttContent.module.scss';
@@ -320,10 +319,8 @@ const GanttContent = React.memo(() => {
               onClick={() => handleEpicOpen(epic.id)}
             >
               <span
-                className={classNames(
-                  styles.rowColor,
-                  globalStyles[`background${upperFirst(camelCase(epic.color))}`],
-                )}
+                style={getEpicColorStyle(epic.color)}
+                className={classNames(styles.rowColor, getEpicColorClassName(epic.color))}
               />
               <span>{epic.name || t('common.noName', { defaultValue: 'No name' })}</span>
             </button>
@@ -474,7 +471,8 @@ const GanttRow = React.memo(
     const percent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
     const todayLeft = differenceInCalendarDays(today, rangeStart) * dayWidth;
 
-    const colorClass = globalStyles[`background${upperFirst(camelCase(epic.color))}`];
+    const colorClass = getEpicColorClassName(epic.color);
+    const colorStyle = getEpicColorStyle(epic.color);
 
     return (
       <div
@@ -490,7 +488,7 @@ const GanttRow = React.memo(
           onClick={canEdit ? undefined : handleBarClick}
         >
           {canEdit && count > 1 && <Icon fitted name="bars" className={styles.dragHandleIcon} />}
-          <span className={classNames(styles.rowColor, colorClass)} />
+          <span style={colorStyle} className={classNames(styles.rowColor, colorClass)} />
           <span className={styles.rowNameText}>{epic.name || ' '}</span>
         </div>
         <div
@@ -502,7 +500,7 @@ const GanttRow = React.memo(
                                        jsx-a11y/no-static-element-interactions */}
           <div
             className={classNames(styles.bar, colorClass, preview && styles.barDragging)}
-            style={{ left, width, top: 6, height: rowHeight - 14 }}
+            style={{ ...colorStyle, left, width, top: 6, height: rowHeight - 14 }}
             title={epic.name || undefined}
             onMouseDown={canEdit ? handleMouseDown('move') : undefined}
             onClick={canEdit ? undefined : handleBarClick}

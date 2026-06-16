@@ -110,7 +110,7 @@ module.exports = {
     },
     color: {
       type: 'string',
-      isIn: Epic.COLORS,
+      custom: (value) => Epic.COLORS.includes(value) || /^#[0-9a-fA-F]{6}$/.test(value),
       required: true,
     },
     startDate: {
