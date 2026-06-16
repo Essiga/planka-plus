@@ -51,6 +51,7 @@ export function* fetchCore() {
   let projects2;
   let boardMemberships2;
   let labels;
+  let epics;
   let lists;
   let cards1;
   let cardMemberships;
@@ -67,6 +68,7 @@ export function* fetchCore() {
       board,
       card,
       labels,
+      epics,
       lists,
       cardMemberships,
       cardLabels,
@@ -117,6 +119,7 @@ export function* fetchCore() {
     baseCustomFieldGroups,
     boards,
     labels,
+    epics,
     lists,
     cardMemberships,
     cardLabels,

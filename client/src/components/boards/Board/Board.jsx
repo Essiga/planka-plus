@@ -12,6 +12,8 @@ import { BoardContexts, BoardViews } from '../../../constants/Enums';
 import KanbanContent from './KanbanContent';
 import FiniteContent from './FiniteContent';
 import EndlessContent from './EndlessContent';
+import BacklogContent from './BacklogContent';
+import GanttContent from './GanttContent';
 import ShortcutsProvider from './ShortcutsProvider';
 import CardModal from '../../cards/CardModal';
 import BoardActivitiesModal from '../../activities/BoardActivitiesModal';
@@ -22,7 +24,11 @@ const Board = React.memo(() => {
   const isCardModalOpened = useSelector((state) => !!selectors.selectPath(state).cardId);
 
   let Content;
-  if (board.view === BoardViews.KANBAN) {
+  if (board.view === BoardViews.BACKLOG) {
+    Content = BacklogContent;
+  } else if (board.view === BoardViews.GANTT) {
+    Content = GanttContent;
+  } else if (board.view === BoardViews.KANBAN) {
     Content = KanbanContent;
   } else {
     switch (board.context) {

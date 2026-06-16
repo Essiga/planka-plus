@@ -163,8 +163,71 @@ module.exports = {
         }
       }
 
+      // Epic ordering: reposition among the epic's other cards, append on assign, or clear
+      if (_.isNull(values.epicId)) {
+        values.epicPosition = null;
+      } else {
+        const epicId = _.isUndefined(values.epicId) ? inputs.record.epicId : values.epicId;
+
+        if (epicId && !_.isUndefined(values.epicPosition) && !_.isNull(values.epicPosition)) {
+          const epicCards = await Card.qm.getByEpicId(epicId, {
+            exceptIdOrIds: inputs.record.id,
+          });
+
+          const positionables = epicCards.map((epicCard) => ({
+            ...epicCard,
+            position: epicCard.epicPosition,
+          }));
+
+          const { position, repositions } = sails.helpers.utils.insertToPositionables(
+            values.epicPosition,
+            positionables,
+          );
+
+          values.epicPosition = position;
+
+          // eslint-disable-next-line no-restricted-syntax
+          for (const reposition of repositions) {
+            // eslint-disable-next-line no-await-in-loop
+            await Card.qm.updateOne(
+              {
+                id: reposition.record.id,
+              },
+              {
+                epicPosition: reposition.position,
+              },
+            );
+
+            sails.sockets.broadcast(`board:${reposition.record.boardId}`, 'cardUpdate', {
+              item: {
+                id: reposition.record.id,
+                epicPosition: reposition.position,
+              },
+            });
+          }
+        } else if (
+          epicId &&
+          !_.isUndefined(values.epicId) &&
+          values.epicId !== inputs.record.epicId &&
+          _.isUndefined(values.epicPosition)
+        ) {
+          // Newly assigned to an epic without an explicit position: append to the end
+          const epicCards = await Card.qm.getByEpicId(epicId, {
+            exceptIdOrIds: inputs.record.id,
+          });
+
+          const lastEpicCard = epicCards[epicCards.length - 1];
+          values.epicPosition =
+            (lastEpicCard && lastEpicCard.epicPosition ? lastEpicCard.epicPosition : 0) + 2 ** 16;
+        }
+      }
+
       let prevLabels;
       if (values.board) {
+        // Epics are board-scoped, so a card moved to another board loses its epic
+        values.epicId = null;
+        values.epicPosition = null;
+
         prevLabels = await sails.helpers.cards.getLabels(inputs.record.id);
 
         const boardMemberUserIds = await sails.helpers.boards.getMemberUserIds(values.board.id);

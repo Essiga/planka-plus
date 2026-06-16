@@ -18,6 +18,8 @@ import baseCustomFieldGroups from './base-custom-field-groups';
 import boards from './boards';
 import boardMemberships from './board-memberships';
 import labels from './labels';
+import epics from './epics';
+import epicComments from './epic-comments';
 import lists from './lists';
 import cards from './cards';
 import cardMemberships from './card-memberships';
@@ -49,6 +51,8 @@ export default {
   ...boards,
   ...boardMemberships,
   ...labels,
+  ...epics,
+  ...epicComments,
   ...lists,
   ...cards,
   ...cardMemberships,

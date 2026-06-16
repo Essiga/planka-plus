@@ -1,0 +1,137 @@
+/*!
+ * Copyright (c) 2024 PLANKA Software GmbH
+ * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
+ */
+
+:global(#app) {
+  .wrapper {
+    color: #17394d;
+    height: 100%;
+    overflow: auto;
+    padding: 24px;
+    width: 100%;
+  }
+
+  .inner {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    min-width: 720px;
+    padding: 16px;
+  }
+
+  .labelColumn {
+    flex: 0 0 200px;
+    width: 200px;
+  }
+
+  .axis {
+    display: flex;
+    margin-bottom: 8px;
+  }
+
+  .track {
+    flex: 1 1 auto;
+    position: relative;
+  }
+
+  .axisTrack {
+    border-bottom: 1px solid #e2e4e6;
+    height: 24px;
+  }
+
+  .axisMonth {
+    border-left: 1px solid #e2e4e6;
+    bottom: 0;
+    color: #6b808c;
+    font-size: 12px;
+    overflow: hidden;
+    padding-left: 4px;
+    position: absolute;
+    top: 0;
+    white-space: nowrap;
+  }
+
+  .row {
+    align-items: center;
+    display: flex;
+    min-height: 36px;
+  }
+
+  .rowLabel {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    flex: 0 0 200px;
+    gap: 8px;
+    overflow: hidden;
+    padding-right: 12px;
+    width: 200px;
+  }
+
+  .rowLabelName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rowColor {
+    border-radius: 3px;
+    flex: 0 0 auto;
+    height: 12px;
+    width: 12px;
+  }
+
+  .barTrack {
+    flex: 1 1 auto;
+    height: 36px;
+    position: relative;
+  }
+
+  .gridLine {
+    border-left: 1px solid #f0f1f3;
+    bottom: 0;
+    position: absolute;
+    top: 0;
+  }
+
+  .bar {
+    border-radius: 4px;
+    cursor: pointer;
+    height: 20px;
+    overflow: hidden;
+    position: absolute;
+    top: 8px;
+  }
+
+  .barFill {
+    background: rgba(0, 0, 0, 0.25);
+    height: 100%;
+  }
+
+  .unscheduled {
+    margin-top: 24px;
+  }
+
+  .unscheduledTitle {
+    color: #6b808c;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .unscheduledItem {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .empty {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 24px 0;
+    text-align: center;
+  }
+}

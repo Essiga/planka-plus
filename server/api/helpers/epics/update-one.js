@@ -1,0 +1,85 @@
+/*!
+ * Copyright (c) 2024 PLANKA Software GmbH
+ * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
+ */
+
+module.exports = {
+  inputs: {
+    record: {
+      type: 'ref',
+      required: true,
+    },
+    values: {
+      type: 'json',
+      required: true,
+    },
+    project: {
+      type: 'ref',
+      required: true,
+    },
+    board: {
+      type: 'ref',
+      required: true,
+    },
+    actorUser: {
+      type: 'ref',
+      required: true,
+    },
+    request: {
+      type: 'ref',
+    },
+  },
+
+  async fn(inputs) {
+    const { values } = inputs;
+
+    if (!_.isUndefined(values.position)) {
+      const epics = await Epic.qm.getByBoardId(inputs.record.boardId, {
+        exceptIdOrIds: inputs.record.id,
+      });
+
+      const { position, repositions } = sails.helpers.utils.insertToPositionables(
+        values.position,
+        epics,
+      );
+
+      values.position = position;
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const reposition of repositions) {
+        // eslint-disable-next-line no-await-in-loop
+        await Epic.qm.updateOne(
+          {
+            id: reposition.record.id,
+            boardId: reposition.record.boardId,
+          },
+          {
+            position: reposition.position,
+          },
+        );
+
+        sails.sockets.broadcast(`board:${inputs.record.boardId}`, 'epicUpdate', {
+          item: {
+            id: reposition.record.id,
+            position: reposition.position,
+          },
+        });
+      }
+    }
+
+    const epic = await Epic.qm.updateOne(inputs.record.id, values);
+
+    if (epic) {
+      sails.sockets.broadcast(
+        `board:${epic.boardId}`,
+        'epicUpdate',
+        {
+          item: epic,
+        },
+        inputs.request,
+      );
+    }
+
+    return epic;
+  },
+};

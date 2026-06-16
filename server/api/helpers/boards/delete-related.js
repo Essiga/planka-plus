@@ -29,6 +29,17 @@ module.exports = {
       boardId: boardIdOrIds,
     });
 
+    const epics = await Epic.qm.delete({
+      boardId: boardIdOrIds,
+    });
+
+    const epicIds = sails.helpers.utils.mapRecords(epics);
+    if (epicIds.length > 0) {
+      await EpicComment.qm.delete({
+        epicId: epicIds,
+      });
+    }
+
     const lists = await List.qm.delete({
       boardId: boardIdOrIds,
     });

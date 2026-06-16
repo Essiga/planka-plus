@@ -85,6 +85,11 @@
  *                       description: Related labels
  *                       items:
  *                         $ref: '#/components/schemas/Label'
+ *                     epics:
+ *                       type: array
+ *                       description: Related epics
+ *                       items:
+ *                         $ref: '#/components/schemas/Epic'
  *                     lists:
  *                       type: array
  *                       description: Related lists
@@ -204,6 +209,7 @@ module.exports = {
 
     const boardMemberships = await BoardMembership.qm.getByBoardId(board.id);
     const labels = await Label.qm.getByBoardId(board.id);
+    const epics = await Epic.qm.getByBoardId(board.id);
     const lists = await List.qm.getByBoardId(board.id);
 
     const finiteLists = lists.filter((list) => sails.helpers.lists.isFinite(list));
@@ -263,6 +269,7 @@ module.exports = {
       included: {
         boardMemberships,
         labels,
+        epics,
         lists,
         cards,
         cardMemberships,

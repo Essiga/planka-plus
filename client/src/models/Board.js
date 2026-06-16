@@ -282,6 +282,10 @@ export default class extends BaseModel {
     return this.labels.orderBy(['position', 'id.length', 'id']);
   }
 
+  getEpicsQuerySet() {
+    return this.epics.orderBy(['position', 'id.length', 'id']);
+  }
+
   getListsQuerySet() {
     return this.lists.orderBy(['position', 'id.length', 'id']);
   }
@@ -457,6 +461,10 @@ export default class extends BaseModel {
 
     this.labels.toModelArray().forEach((labelModel) => {
       labelModel.deleteWithRelated();
+    });
+
+    this.epics.toModelArray().forEach((epicModel) => {
+      epicModel.deleteWithRelated();
     });
 
     this.deleteListsWithRelated(soft);

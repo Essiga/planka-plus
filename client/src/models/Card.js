@@ -23,6 +23,7 @@ export default class extends BaseModel {
     isDueCompleted: attr(),
     stopwatch: attr(),
     isClosed: attr(),
+    epicPosition: attr(),
     commentsTotal: attr({
       getDefault: () => 0,
     }),
@@ -77,6 +78,11 @@ export default class extends BaseModel {
       to: 'Attachment',
       as: 'coverAttachment',
       relatedName: 'coveredCard',
+    }),
+    epicId: fk({
+      to: 'Epic',
+      as: 'epic',
+      relatedName: 'cards',
     }),
     users: many('User', 'cards'),
     labels: many('Label', 'cards'),

@@ -7,7 +7,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Checkbox, Grid, Icon } from 'semantic-ui-react';
+import { Button, Checkbox, Dropdown, Grid, Icon } from 'semantic-ui-react';
 import { useDidUpdate } from '../../../lib/hooks';
 
 import selectors from '../../../selectors';
@@ -35,6 +35,8 @@ import UserAvatar from '../../users/UserAvatar';
 import BoardMembershipsStep from '../../board-memberships/BoardMembershipsStep';
 import LabelChip from '../../labels/LabelChip';
 import LabelsStep from '../../labels/LabelsStep';
+import EpicChip from '../../epics/EpicChip';
+import EpicModal from '../../epics/EpicModal';
 import ListsStep from '../../lists/ListsStep';
 import AddTaskListStep from '../../task-lists/AddTaskListStep';
 import Attachments from '../../attachments/Attachments';
@@ -51,6 +53,7 @@ const ProjectContent = React.memo(() => {
   const board = useSelector(selectors.selectCurrentBoard);
   const userIds = useSelector(selectors.selectUserIdsForCurrentCard);
   const labelIds = useSelector(selectors.selectLabelIdsForCurrentCard);
+  const epics = useSelector(selectors.selectEpicsForCurrentBoard);
   const attachmentIds = useSelector(selectors.selectAttachmentIdsForCurrentCard);
 
   const isJoined = useSelector(selectors.selectIsCurrentUserInCurrentCard);
@@ -144,6 +147,7 @@ const ProjectContent = React.memo(() => {
   const [t] = useTranslation();
   const [descriptionDraft, setDescriptionDraft] = useState(null);
   const [isEditDescriptionOpened, setIsEditDescriptionOpened] = useState(false);
+  const [isEpicModalOpened, setIsEpicModalOpened] = useState(false);
   const [, , setIsClosableActive] = useContext(ClosableContext);
 
   const handleListSelect = useCallback(
@@ -230,6 +234,25 @@ const ProjectContent = React.memo(() => {
     [dispatch],
   );
 
+  const handleEpicChange = useCallback(
+    (_, { value }) => {
+      dispatch(
+        entryActions.updateCurrentCard({
+          epicId: value || null,
+        }),
+      );
+    },
+    [dispatch],
+  );
+
+  const handleEpicChipClick = useCallback(() => {
+    setIsEpicModalOpened(true);
+  }, []);
+
+  const handleEpicModalClose = useCallback(() => {
+    setIsEpicModalOpened(false);
+  }, []);
+
   const handleLabelDeselect = useCallback(
     (labelId) => {
       dispatch(entryActions.removeLabelFromCurrentCard(labelId));
@@ -295,105 +318,347 @@ const ProjectContent = React.memo(() => {
   const MoreActionsPopup = usePopupInClosableContext(MoreActionsStep);
   const ConfirmationPopup = usePopupInClosableContext(ConfirmationStep);
 
+  const epicOptions = epics.map((epic) => ({
+    key: epic.id,
+    value: epic.id,
+    text: epic.name || t('common.noName', { defaultValue: 'No name' }),
+  }));
+
   return (
-    <Grid className={styles.wrapper}>
-      <Grid.Row className={styles.headerPadding}>
-        <Grid.Column width={16} className={styles.headerPadding}>
-          <div className={styles.headerWrapper}>
-            <Icon name={CardTypeIcons[CardTypes.PROJECT]} className={styles.moduleIcon} />
-            <div className={styles.headerTitleWrapper}>
-              {canEditName ? (
-                <NameField defaultValue={card.name} onUpdate={handleNameUpdate} />
-              ) : (
-                <div className={styles.headerTitle}>{card.name}</div>
-              )}
+    <>
+      {isEpicModalOpened && card.epicId && (
+        <EpicModal id={card.epicId} canEdit={canUseLabels} onClose={handleEpicModalClose} />
+      )}
+      <Grid className={styles.wrapper}>
+        <Grid.Row className={styles.headerPadding}>
+          <Grid.Column width={16} className={styles.headerPadding}>
+            <div className={styles.headerWrapper}>
+              <Icon name={CardTypeIcons[CardTypes.PROJECT]} className={styles.moduleIcon} />
+              <div className={styles.headerTitleWrapper}>
+                {canEditName ? (
+                  <NameField defaultValue={card.name} onUpdate={handleNameUpdate} />
+                ) : (
+                  <div className={styles.headerTitle}>{card.name}</div>
+                )}
+              </div>
             </div>
-          </div>
-        </Grid.Column>
-      </Grid.Row>
-      <Grid.Row className={styles.modalPadding}>
-        <Grid.Column width={12} className={styles.contentPadding}>
-          {(card.dueDate ||
-            card.stopwatch ||
-            board.alwaysDisplayCardCreator ||
-            userIds.length > 0 ||
-            labelIds.length > 0) && (
-            <div className={styles.moduleWrapper}>
-              {board.alwaysDisplayCardCreator && (
-                <div className={styles.attachments}>
-                  <div className={styles.text}>
-                    {t('common.creator', {
-                      context: 'title',
-                    })}
+          </Grid.Column>
+        </Grid.Row>
+        <Grid.Row className={styles.modalPadding}>
+          <Grid.Column width={12} className={styles.contentPadding}>
+            {(card.dueDate ||
+              card.stopwatch ||
+              board.alwaysDisplayCardCreator ||
+              userIds.length > 0 ||
+              labelIds.length > 0) && (
+              <div className={styles.moduleWrapper}>
+                {board.alwaysDisplayCardCreator && (
+                  <div className={styles.attachments}>
+                    <div className={styles.text}>
+                      {t('common.creator', {
+                        context: 'title',
+                      })}
+                    </div>
+                    <span className={styles.attachment}>
+                      <CreationDetailsPopup userId={card.creatorUserId}>
+                        <UserAvatar withCreatorIndicator id={card.creatorUserId} />
+                      </CreationDetailsPopup>
+                    </span>
                   </div>
-                  <span className={styles.attachment}>
-                    <CreationDetailsPopup userId={card.creatorUserId}>
-                      <UserAvatar withCreatorIndicator id={card.creatorUserId} />
-                    </CreationDetailsPopup>
-                  </span>
-                </div>
-              )}
-              {userIds.length > 0 && (
-                <div className={styles.attachments}>
-                  <div className={styles.text}>
-                    {t('common.members', {
-                      context: 'title',
-                    })}
-                  </div>
-                  {userIds.map((userId) => (
-                    <span key={userId} className={styles.attachment}>
-                      {canUseMembers ? (
-                        <BoardMembershipsPopup
-                          currentUserIds={userIds}
-                          onUserSelect={handleUserSelect}
-                          onUserDeselect={handleUserDeselect}
-                        >
+                )}
+                {userIds.length > 0 && (
+                  <div className={styles.attachments}>
+                    <div className={styles.text}>
+                      {t('common.members', {
+                        context: 'title',
+                      })}
+                    </div>
+                    {userIds.map((userId) => (
+                      <span key={userId} className={styles.attachment}>
+                        {canUseMembers ? (
+                          <BoardMembershipsPopup
+                            currentUserIds={userIds}
+                            onUserSelect={handleUserSelect}
+                            onUserDeselect={handleUserDeselect}
+                          >
+                            <UserAvatar id={userId} />
+                          </BoardMembershipsPopup>
+                        ) : (
                           <UserAvatar id={userId} />
-                        </BoardMembershipsPopup>
+                        )}
+                      </span>
+                    ))}
+                    {canUseMembers && (
+                      <BoardMembershipsPopup
+                        currentUserIds={userIds}
+                        onUserSelect={handleUserSelect}
+                        onUserDeselect={handleUserDeselect}
+                      >
+                        <button
+                          type="button"
+                          className={classNames(styles.attachment, styles.dueDate)}
+                        >
+                          <Icon name="add" size="small" className={styles.addAttachment} />
+                        </button>
+                      </BoardMembershipsPopup>
+                    )}
+                  </div>
+                )}
+                {labelIds.length > 0 && (
+                  <div className={styles.attachments}>
+                    <div className={styles.text}>
+                      {t('common.labels', {
+                        context: 'title',
+                      })}
+                    </div>
+                    {labelIds.map((labelId) => (
+                      <span key={labelId} className={styles.attachment}>
+                        {canUseLabels ? (
+                          <LabelsPopup
+                            currentIds={labelIds}
+                            cardId={card.id}
+                            onSelect={handleLabelSelect}
+                            onDeselect={handleLabelDeselect}
+                          >
+                            <LabelChip id={labelId} />
+                          </LabelsPopup>
+                        ) : (
+                          <LabelChip id={labelId} />
+                        )}
+                      </span>
+                    ))}
+                    {canUseLabels && (
+                      <LabelsPopup
+                        currentIds={labelIds}
+                        cardId={card.id}
+                        onSelect={handleLabelSelect}
+                        onDeselect={handleLabelDeselect}
+                      >
+                        <button
+                          type="button"
+                          className={classNames(styles.attachment, styles.dueDate)}
+                        >
+                          <Icon name="add" size="small" className={styles.addAttachment} />
+                        </button>
+                      </LabelsPopup>
+                    )}
+                  </div>
+                )}
+                {(canUseLabels || card.epicId) && (
+                  <div className={styles.attachments}>
+                    <div className={styles.text}>{t('common.epic', { defaultValue: 'Epic' })}</div>
+                    {card.epicId && (
+                      <span className={styles.attachment}>
+                        <EpicChip id={card.epicId} onClick={handleEpicChipClick} />
+                      </span>
+                    )}
+                    {canUseLabels && (
+                      <span className={classNames(styles.attachment, styles.epicDropdown)}>
+                        <Dropdown
+                          fluid
+                          selection
+                          clearable
+                          search
+                          selectOnBlur={false}
+                          selectOnNavigation={false}
+                          value={card.epicId || ''}
+                          options={epicOptions}
+                          placeholder={t('common.selectEpic', { defaultValue: 'Select epic' })}
+                          noResultsMessage={t('common.noEpics', { defaultValue: 'No epics yet' })}
+                          onChange={handleEpicChange}
+                        />
+                      </span>
+                    )}
+                  </div>
+                )}
+                {card.dueDate && (
+                  <div className={styles.attachments}>
+                    <div className={styles.text}>
+                      {t('common.dueDate', {
+                        context: 'title',
+                      })}
+                    </div>
+                    <span className={classNames(styles.attachment, styles.attachmentDueDate)}>
+                      {canEditDueDate ? (
+                        <>
+                          {!card.isClosed && (
+                            <Checkbox
+                              checked={card.isDueCompleted}
+                              disabled={!canEditDueDate}
+                              onChange={handleDueCompletionChange}
+                            />
+                          )}
+                          <EditDueDatePopup cardId={card.id}>
+                            <DueDateChip
+                              withStatusIcon
+                              value={card.dueDate}
+                              isCompleted={card.isDueCompleted}
+                              withStatus={!card.isClosed}
+                            />
+                          </EditDueDatePopup>
+                        </>
                       ) : (
-                        <UserAvatar id={userId} />
+                        <DueDateChip
+                          withStatusIcon
+                          value={card.dueDate}
+                          isCompleted={card.isDueCompleted}
+                          withStatus={!card.isClosed}
+                        />
                       )}
                     </span>
-                  ))}
+                  </div>
+                )}
+                {card.stopwatch && (
+                  <div className={styles.attachments}>
+                    <div className={styles.text}>
+                      {t('common.stopwatch', {
+                        context: 'title',
+                      })}
+                    </div>
+                    <span className={styles.attachment}>
+                      {canEditStopwatch ? (
+                        <EditStopwatchPopup cardId={card.id}>
+                          <StopwatchChip value={card.stopwatch} />
+                        </EditStopwatchPopup>
+                      ) : (
+                        <StopwatchChip value={card.stopwatch} />
+                      )}
+                    </span>
+                    {canEditStopwatch && (
+                      <button
+                        type="button"
+                        className={classNames(styles.attachment, styles.dueDate)}
+                        onClick={handleToggleStopwatchClick}
+                      >
+                        <Icon
+                          name={card.stopwatch.startedAt ? 'pause' : 'play'}
+                          size="small"
+                          className={styles.addAttachment}
+                        />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            {(card.description || canEditDescription) && (
+              <div className={classNames(styles.contentModule, styles.contentModuleDescription)}>
+                <div className={styles.moduleWrapper}>
+                  <Icon name="align left" className={styles.moduleIcon} />
+                  <div className={styles.moduleHeader}>
+                    {t('common.description')}
+                    {canEditDescription && !isEditDescriptionOpened && descriptionDraft && (
+                      <span className={styles.draftChip}>{t('common.unsavedChanges')}</span>
+                    )}
+                  </div>
+                  {canEditDescription && (
+                    <>
+                      {isEditDescriptionOpened && (
+                        <EditMarkdown
+                          defaultValue={card.description}
+                          draftValue={descriptionDraft}
+                          placeholder="common.enterDescription"
+                          onUpdate={handleDescriptionUpdate}
+                          onClose={handleEditDescriptionClose}
+                        />
+                      )}
+                      {!isEditDescriptionOpened &&
+                        (card.description ? (
+                          /* eslint-disable-next-line jsx-a11y/click-events-have-key-events,
+                                                    jsx-a11y/no-static-element-interactions */
+                          <div
+                            className={styles.cursorPointer}
+                            onClick={handleEditDescriptionClick}
+                          >
+                            <Button className={styles.editButton}>
+                              <Icon fitted name="pencil" size="small" />
+                            </Button>
+                            <ExpandableMarkdown>{card.description}</ExpandableMarkdown>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className={styles.descriptionButton}
+                            onClick={handleEditDescriptionClick}
+                          >
+                            <span className={styles.descriptionButtonText}>
+                              {t('action.addMoreDetailedDescription')}
+                            </span>
+                          </button>
+                        ))}
+                    </>
+                  )}
+                  {!canEditDescription && (
+                    <ExpandableMarkdown>{card.description}</ExpandableMarkdown>
+                  )}
+                </div>
+              </div>
+            )}
+            <CustomFieldGroups />
+            <TaskLists />
+            {attachmentIds.length > 0 && (
+              <div className={styles.contentModule}>
+                <div className={styles.moduleWrapper}>
+                  <Icon name="attach" className={styles.moduleIcon} />
+                  <div className={styles.moduleHeader}>{t('common.attachments')}</div>
+                  <Attachments />
+                </div>
+              </div>
+            )}
+            <div className={styles.contentModule}>
+              <div className={styles.moduleWrapper}>
+                <Icon name="list ul" className={styles.moduleIcon} />
+                <Communication />
+              </div>
+            </div>
+          </Grid.Column>
+          <Grid.Column width={4} className={styles.sidebarPadding}>
+            <div className={styles.sticky}>
+              <div className={styles.actions}>
+                <div className={classNames(styles.attachments, styles.attachmentsList)}>
+                  <div className={classNames(styles.text, styles.textList)}>{t('common.list')}</div>
+                  {canUseLists ? (
+                    <ListsPopup currentId={list.id} onSelect={handleListSelect}>
+                      <button type="button" className={styles.listButton}>
+                        <span className={classNames(styles.list, styles.listHoverable)}>
+                          <Icon name="columns" size="small" className={styles.listIcon} />
+                          <span className={styles.hidable}>
+                            {list.name || t(`common.${list.type}`)}
+                          </span>
+                        </span>
+                      </button>
+                    </ListsPopup>
+                  ) : (
+                    <span className={styles.list}>
+                      <Icon name="columns" size="small" className={styles.listIcon} />
+                      <span className={styles.hidable}>
+                        {list.name || t(`common.${list.type}`)}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </div>
+              {(canEditDueDate ||
+                canEditStopwatch ||
+                canUseMembers ||
+                canUseLabels ||
+                canAddTaskList ||
+                canAddAttachment ||
+                canAddCustomFieldGroup) && (
+                <div className={styles.actions}>
+                  <span className={styles.actionsTitle}>{t('action.addToCard')}</span>
                   {canUseMembers && (
                     <BoardMembershipsPopup
                       currentUserIds={userIds}
                       onUserSelect={handleUserSelect}
                       onUserDeselect={handleUserDeselect}
                     >
-                      <button
-                        type="button"
-                        className={classNames(styles.attachment, styles.dueDate)}
-                      >
-                        <Icon name="add" size="small" className={styles.addAttachment} />
-                      </button>
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="user outline" className={styles.actionIcon} />
+                        {t('common.members')}
+                      </Button>
                     </BoardMembershipsPopup>
                   )}
-                </div>
-              )}
-              {labelIds.length > 0 && (
-                <div className={styles.attachments}>
-                  <div className={styles.text}>
-                    {t('common.labels', {
-                      context: 'title',
-                    })}
-                  </div>
-                  {labelIds.map((labelId) => (
-                    <span key={labelId} className={styles.attachment}>
-                      {canUseLabels ? (
-                        <LabelsPopup
-                          currentIds={labelIds}
-                          cardId={card.id}
-                          onSelect={handleLabelSelect}
-                          onDeselect={handleLabelDeselect}
-                        >
-                          <LabelChip id={labelId} />
-                        </LabelsPopup>
-                      ) : (
-                        <LabelChip id={labelId} />
-                      )}
-                    </span>
-                  ))}
                   {canUseLabels && (
                     <LabelsPopup
                       currentIds={labelIds}
@@ -401,369 +666,177 @@ const ProjectContent = React.memo(() => {
                       onSelect={handleLabelSelect}
                       onDeselect={handleLabelDeselect}
                     >
-                      <button
-                        type="button"
-                        className={classNames(styles.attachment, styles.dueDate)}
-                      >
-                        <Icon name="add" size="small" className={styles.addAttachment} />
-                      </button>
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="bookmark outline" className={styles.actionIcon} />
+                        {t('common.labels')}
+                      </Button>
                     </LabelsPopup>
                   )}
-                </div>
-              )}
-              {card.dueDate && (
-                <div className={styles.attachments}>
-                  <div className={styles.text}>
-                    {t('common.dueDate', {
-                      context: 'title',
-                    })}
-                  </div>
-                  <span className={classNames(styles.attachment, styles.attachmentDueDate)}>
-                    {canEditDueDate ? (
-                      <>
-                        {!card.isClosed && (
-                          <Checkbox
-                            checked={card.isDueCompleted}
-                            disabled={!canEditDueDate}
-                            onChange={handleDueCompletionChange}
-                          />
-                        )}
-                        <EditDueDatePopup cardId={card.id}>
-                          <DueDateChip
-                            withStatusIcon
-                            value={card.dueDate}
-                            isCompleted={card.isDueCompleted}
-                            withStatus={!card.isClosed}
-                          />
-                        </EditDueDatePopup>
-                      </>
-                    ) : (
-                      <DueDateChip
-                        withStatusIcon
-                        value={card.dueDate}
-                        isCompleted={card.isDueCompleted}
-                        withStatus={!card.isClosed}
-                      />
-                    )}
-                  </span>
-                </div>
-              )}
-              {card.stopwatch && (
-                <div className={styles.attachments}>
-                  <div className={styles.text}>
-                    {t('common.stopwatch', {
-                      context: 'title',
-                    })}
-                  </div>
-                  <span className={styles.attachment}>
-                    {canEditStopwatch ? (
-                      <EditStopwatchPopup cardId={card.id}>
-                        <StopwatchChip value={card.stopwatch} />
-                      </EditStopwatchPopup>
-                    ) : (
-                      <StopwatchChip value={card.stopwatch} />
-                    )}
-                  </span>
+                  {canEditDueDate && (
+                    <EditDueDatePopup cardId={card.id}>
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="calendar check outline" className={styles.actionIcon} />
+                        {t('common.dueDate', {
+                          context: 'title',
+                        })}
+                      </Button>
+                    </EditDueDatePopup>
+                  )}
                   {canEditStopwatch && (
-                    <button
-                      type="button"
-                      className={classNames(styles.attachment, styles.dueDate)}
-                      onClick={handleToggleStopwatchClick}
+                    <EditStopwatchPopup cardId={card.id}>
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="clock outline" className={styles.actionIcon} />
+                        {t('common.stopwatch')}
+                      </Button>
+                    </EditStopwatchPopup>
+                  )}
+                  {canAddTaskList && (
+                    <AddTaskListPopup>
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="check square outline" className={styles.actionIcon} />
+                        {t('common.taskList', {
+                          context: 'title',
+                        })}
+                      </Button>
+                    </AddTaskListPopup>
+                  )}
+                  {canAddAttachment && (
+                    <AddAttachmentPopup>
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="attach" className={styles.actionIcon} />
+                        {t('common.attachment')}
+                      </Button>
+                    </AddAttachmentPopup>
+                  )}
+                  {canAddCustomFieldGroup && (
+                    <AddCustomFieldGroupPopup onCreate={handleCustomFieldGroupCreate}>
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="sticky note outline" className={styles.actionIcon} />
+                        {t('common.customField', {
+                          context: 'title',
+                        })}
+                      </Button>
+                    </AddCustomFieldGroupPopup>
+                  )}
+                </div>
+              )}
+              {((!board.limitCardTypesToDefaultOne && canEditType) ||
+                canSubscribe ||
+                canJoin ||
+                canDuplicate ||
+                canMove ||
+                (canRestore && (isInArchiveList || isInTrashList)) ||
+                (canArchive && !isInArchiveList) ||
+                canDelete) && (
+                <div className={styles.actions}>
+                  <span className={styles.actionsTitle}>{t('common.actions')}</span>
+                  {canJoin && (
+                    <Button
+                      fluid
+                      className={classNames(styles.actionButton, styles.hidable)}
+                      onClick={handleToggleJointClick}
                     >
                       <Icon
-                        name={card.stopwatch.startedAt ? 'pause' : 'play'}
-                        size="small"
-                        className={styles.addAttachment}
+                        name={isJoined ? 'flag outline' : 'flag checkered'}
+                        className={styles.actionIcon}
                       />
-                    </button>
+                      {isJoined ? t('action.leave') : t('action.join')}
+                    </Button>
+                  )}
+                  {canSubscribe && (
+                    <Button
+                      fluid
+                      disabled={board.isSubscribed}
+                      className={classNames(styles.actionButton, styles.hidable)}
+                      onClick={handleToggleSubscriptionClick}
+                    >
+                      {board.isSubscribed ? (
+                        <>
+                          <Icon name="bell slash outline" className={styles.actionIcon} />
+                          {t('common.boardSubscribed')}
+                        </>
+                      ) : (
+                        <>
+                          <Icon
+                            name={card.isSubscribed ? 'bell slash outline' : 'bell outline'}
+                            className={styles.actionIcon}
+                          />
+                          {card.isSubscribed ? t('action.unsubscribe') : t('action.subscribe')}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  {canRestore && (isInArchiveList || isInTrashList) && (
+                    <Button
+                      fluid
+                      disabled={!prevList}
+                      className={classNames(styles.actionButton, styles.hidable)}
+                      onClick={handleRestoreClick}
+                    >
+                      <Icon name="undo alternate" className={styles.actionIcon} />
+                      {prevList
+                        ? t('action.restoreToList', {
+                            list: prevList.name || t(`common.${prevList.type}`),
+                          })
+                        : t('common.selectListToRestoreThisCard')}
+                    </Button>
+                  )}
+                  {canArchive && !isInArchiveList && (
+                    <ConfirmationPopup
+                      title="common.archiveCard"
+                      content="common.areYouSureYouWantToArchiveThisCard"
+                      buttonContent="action.archiveCard"
+                      onConfirm={handleArchiveConfirm}
+                    >
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="folder open outline" className={styles.actionIcon} />
+                        {t('action.archive')}
+                      </Button>
+                    </ConfirmationPopup>
+                  )}
+                  {canDelete && (
+                    <ConfirmationPopup
+                      title={isInTrashList ? 'common.deleteCardForever' : 'common.deleteCard'}
+                      content={
+                        isInTrashList
+                          ? 'common.areYouSureYouWantToDeleteThisCardForever'
+                          : 'common.areYouSureYouWantToDeleteThisCard'
+                      }
+                      buttonContent={
+                        isInTrashList ? 'action.deleteCardForever' : 'action.deleteCard'
+                      }
+                      onConfirm={handleDeleteConfirm}
+                    >
+                      <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                        <Icon name="trash alternate outline" className={styles.actionIcon} />
+                        {isInTrashList
+                          ? t('action.deleteForever', {
+                              context: 'title',
+                            })
+                          : t('action.delete')}
+                      </Button>
+                    </ConfirmationPopup>
+                  )}
+                  {((!board.limitCardTypesToDefaultOne && canEditType) ||
+                    canDuplicate ||
+                    canMove) && (
+                    <MoreActionsPopup>
+                      <Button
+                        fluid
+                        className={classNames(styles.moreActionsButton, styles.hidable)}
+                      >
+                        <Icon name="ellipsis horizontal" className={styles.moreActionsButtonIcon} />
+                        {t('common.moreActions')}
+                      </Button>
+                    </MoreActionsPopup>
                   )}
                 </div>
               )}
             </div>
-          )}
-          {(card.description || canEditDescription) && (
-            <div className={classNames(styles.contentModule, styles.contentModuleDescription)}>
-              <div className={styles.moduleWrapper}>
-                <Icon name="align left" className={styles.moduleIcon} />
-                <div className={styles.moduleHeader}>
-                  {t('common.description')}
-                  {canEditDescription && !isEditDescriptionOpened && descriptionDraft && (
-                    <span className={styles.draftChip}>{t('common.unsavedChanges')}</span>
-                  )}
-                </div>
-                {canEditDescription && (
-                  <>
-                    {isEditDescriptionOpened && (
-                      <EditMarkdown
-                        defaultValue={card.description}
-                        draftValue={descriptionDraft}
-                        placeholder="common.enterDescription"
-                        onUpdate={handleDescriptionUpdate}
-                        onClose={handleEditDescriptionClose}
-                      />
-                    )}
-                    {!isEditDescriptionOpened &&
-                      (card.description ? (
-                        /* eslint-disable-next-line jsx-a11y/click-events-have-key-events,
-                                                    jsx-a11y/no-static-element-interactions */
-                        <div className={styles.cursorPointer} onClick={handleEditDescriptionClick}>
-                          <Button className={styles.editButton}>
-                            <Icon fitted name="pencil" size="small" />
-                          </Button>
-                          <ExpandableMarkdown>{card.description}</ExpandableMarkdown>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className={styles.descriptionButton}
-                          onClick={handleEditDescriptionClick}
-                        >
-                          <span className={styles.descriptionButtonText}>
-                            {t('action.addMoreDetailedDescription')}
-                          </span>
-                        </button>
-                      ))}
-                  </>
-                )}
-                {!canEditDescription && <ExpandableMarkdown>{card.description}</ExpandableMarkdown>}
-              </div>
-            </div>
-          )}
-          <CustomFieldGroups />
-          <TaskLists />
-          {attachmentIds.length > 0 && (
-            <div className={styles.contentModule}>
-              <div className={styles.moduleWrapper}>
-                <Icon name="attach" className={styles.moduleIcon} />
-                <div className={styles.moduleHeader}>{t('common.attachments')}</div>
-                <Attachments />
-              </div>
-            </div>
-          )}
-          <div className={styles.contentModule}>
-            <div className={styles.moduleWrapper}>
-              <Icon name="list ul" className={styles.moduleIcon} />
-              <Communication />
-            </div>
-          </div>
-        </Grid.Column>
-        <Grid.Column width={4} className={styles.sidebarPadding}>
-          <div className={styles.sticky}>
-            <div className={styles.actions}>
-              <div className={classNames(styles.attachments, styles.attachmentsList)}>
-                <div className={classNames(styles.text, styles.textList)}>{t('common.list')}</div>
-                {canUseLists ? (
-                  <ListsPopup currentId={list.id} onSelect={handleListSelect}>
-                    <button type="button" className={styles.listButton}>
-                      <span className={classNames(styles.list, styles.listHoverable)}>
-                        <Icon name="columns" size="small" className={styles.listIcon} />
-                        <span className={styles.hidable}>
-                          {list.name || t(`common.${list.type}`)}
-                        </span>
-                      </span>
-                    </button>
-                  </ListsPopup>
-                ) : (
-                  <span className={styles.list}>
-                    <Icon name="columns" size="small" className={styles.listIcon} />
-                    <span className={styles.hidable}>{list.name || t(`common.${list.type}`)}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-            {(canEditDueDate ||
-              canEditStopwatch ||
-              canUseMembers ||
-              canUseLabels ||
-              canAddTaskList ||
-              canAddAttachment ||
-              canAddCustomFieldGroup) && (
-              <div className={styles.actions}>
-                <span className={styles.actionsTitle}>{t('action.addToCard')}</span>
-                {canUseMembers && (
-                  <BoardMembershipsPopup
-                    currentUserIds={userIds}
-                    onUserSelect={handleUserSelect}
-                    onUserDeselect={handleUserDeselect}
-                  >
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="user outline" className={styles.actionIcon} />
-                      {t('common.members')}
-                    </Button>
-                  </BoardMembershipsPopup>
-                )}
-                {canUseLabels && (
-                  <LabelsPopup
-                    currentIds={labelIds}
-                    cardId={card.id}
-                    onSelect={handleLabelSelect}
-                    onDeselect={handleLabelDeselect}
-                  >
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="bookmark outline" className={styles.actionIcon} />
-                      {t('common.labels')}
-                    </Button>
-                  </LabelsPopup>
-                )}
-                {canEditDueDate && (
-                  <EditDueDatePopup cardId={card.id}>
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="calendar check outline" className={styles.actionIcon} />
-                      {t('common.dueDate', {
-                        context: 'title',
-                      })}
-                    </Button>
-                  </EditDueDatePopup>
-                )}
-                {canEditStopwatch && (
-                  <EditStopwatchPopup cardId={card.id}>
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="clock outline" className={styles.actionIcon} />
-                      {t('common.stopwatch')}
-                    </Button>
-                  </EditStopwatchPopup>
-                )}
-                {canAddTaskList && (
-                  <AddTaskListPopup>
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="check square outline" className={styles.actionIcon} />
-                      {t('common.taskList', {
-                        context: 'title',
-                      })}
-                    </Button>
-                  </AddTaskListPopup>
-                )}
-                {canAddAttachment && (
-                  <AddAttachmentPopup>
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="attach" className={styles.actionIcon} />
-                      {t('common.attachment')}
-                    </Button>
-                  </AddAttachmentPopup>
-                )}
-                {canAddCustomFieldGroup && (
-                  <AddCustomFieldGroupPopup onCreate={handleCustomFieldGroupCreate}>
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="sticky note outline" className={styles.actionIcon} />
-                      {t('common.customField', {
-                        context: 'title',
-                      })}
-                    </Button>
-                  </AddCustomFieldGroupPopup>
-                )}
-              </div>
-            )}
-            {((!board.limitCardTypesToDefaultOne && canEditType) ||
-              canSubscribe ||
-              canJoin ||
-              canDuplicate ||
-              canMove ||
-              (canRestore && (isInArchiveList || isInTrashList)) ||
-              (canArchive && !isInArchiveList) ||
-              canDelete) && (
-              <div className={styles.actions}>
-                <span className={styles.actionsTitle}>{t('common.actions')}</span>
-                {canJoin && (
-                  <Button
-                    fluid
-                    className={classNames(styles.actionButton, styles.hidable)}
-                    onClick={handleToggleJointClick}
-                  >
-                    <Icon
-                      name={isJoined ? 'flag outline' : 'flag checkered'}
-                      className={styles.actionIcon}
-                    />
-                    {isJoined ? t('action.leave') : t('action.join')}
-                  </Button>
-                )}
-                {canSubscribe && (
-                  <Button
-                    fluid
-                    disabled={board.isSubscribed}
-                    className={classNames(styles.actionButton, styles.hidable)}
-                    onClick={handleToggleSubscriptionClick}
-                  >
-                    {board.isSubscribed ? (
-                      <>
-                        <Icon name="bell slash outline" className={styles.actionIcon} />
-                        {t('common.boardSubscribed')}
-                      </>
-                    ) : (
-                      <>
-                        <Icon
-                          name={card.isSubscribed ? 'bell slash outline' : 'bell outline'}
-                          className={styles.actionIcon}
-                        />
-                        {card.isSubscribed ? t('action.unsubscribe') : t('action.subscribe')}
-                      </>
-                    )}
-                  </Button>
-                )}
-                {canRestore && (isInArchiveList || isInTrashList) && (
-                  <Button
-                    fluid
-                    disabled={!prevList}
-                    className={classNames(styles.actionButton, styles.hidable)}
-                    onClick={handleRestoreClick}
-                  >
-                    <Icon name="undo alternate" className={styles.actionIcon} />
-                    {prevList
-                      ? t('action.restoreToList', {
-                          list: prevList.name || t(`common.${prevList.type}`),
-                        })
-                      : t('common.selectListToRestoreThisCard')}
-                  </Button>
-                )}
-                {canArchive && !isInArchiveList && (
-                  <ConfirmationPopup
-                    title="common.archiveCard"
-                    content="common.areYouSureYouWantToArchiveThisCard"
-                    buttonContent="action.archiveCard"
-                    onConfirm={handleArchiveConfirm}
-                  >
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="folder open outline" className={styles.actionIcon} />
-                      {t('action.archive')}
-                    </Button>
-                  </ConfirmationPopup>
-                )}
-                {canDelete && (
-                  <ConfirmationPopup
-                    title={isInTrashList ? 'common.deleteCardForever' : 'common.deleteCard'}
-                    content={
-                      isInTrashList
-                        ? 'common.areYouSureYouWantToDeleteThisCardForever'
-                        : 'common.areYouSureYouWantToDeleteThisCard'
-                    }
-                    buttonContent={isInTrashList ? 'action.deleteCardForever' : 'action.deleteCard'}
-                    onConfirm={handleDeleteConfirm}
-                  >
-                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
-                      <Icon name="trash alternate outline" className={styles.actionIcon} />
-                      {isInTrashList
-                        ? t('action.deleteForever', {
-                            context: 'title',
-                          })
-                        : t('action.delete')}
-                    </Button>
-                  </ConfirmationPopup>
-                )}
-                {((!board.limitCardTypesToDefaultOne && canEditType) ||
-                  canDuplicate ||
-                  canMove) && (
-                  <MoreActionsPopup>
-                    <Button fluid className={classNames(styles.moreActionsButton, styles.hidable)}>
-                      <Icon name="ellipsis horizontal" className={styles.moreActionsButtonIcon} />
-                      {t('common.moreActions')}
-                    </Button>
-                  </MoreActionsPopup>
-                )}
-              </div>
-            )}
-          </div>
-        </Grid.Column>
-      </Grid.Row>
-    </Grid>
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+    </>
   );
 });
 

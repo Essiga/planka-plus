@@ -380,6 +380,20 @@ export function* moveCurrentCard(listId, index, autoClose) {
   yield call(moveCard, cardId, listId, index);
 }
 
+export function* moveCardInEpic(id, index) {
+  const { epicId } = yield select(selectors.selectCardById, id);
+
+  if (!epicId) {
+    return;
+  }
+
+  const epicPosition = yield select(selectors.selectNextCardInEpicPosition, epicId, index, id);
+
+  yield call(updateCard, id, {
+    epicPosition,
+  });
+}
+
 export function* moveCardToArchive(id) {
   const archiveListId = yield select(selectors.selectArchiveListIdForCurrentBoard);
 
@@ -766,6 +780,7 @@ export default {
   handleCardUpdate,
   moveCard,
   moveCurrentCard,
+  moveCardInEpic,
   moveCardToArchive,
   moveCurrentCardToArchive,
   moveCardToTrash,

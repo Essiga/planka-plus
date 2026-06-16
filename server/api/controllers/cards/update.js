@@ -136,6 +136,9 @@ const Errors = {
   COVER_ATTACHMENT_NOT_FOUND: {
     coverAttachmentNotFound: 'Cover attachment not found',
   },
+  EPIC_NOT_FOUND: {
+    epicNotFound: 'Epic not found',
+  },
   LIST_MUST_BE_PRESENT: {
     listMustBePresent: 'List must be present',
   },
@@ -157,6 +160,15 @@ module.exports = {
     listId: idInput,
     coverAttachmentId: {
       ...idInput,
+      allowNull: true,
+    },
+    epicId: {
+      ...idInput,
+      allowNull: true,
+    },
+    epicPosition: {
+      type: 'number',
+      min: 0,
       allowNull: true,
     },
     type: {
@@ -213,6 +225,9 @@ module.exports = {
     coverAttachmentNotFound: {
       responseType: 'notFound',
     },
+    epicNotFound: {
+      responseType: 'notFound',
+    },
     listMustBePresent: {
       responseType: 'unprocessableEntity',
     },
@@ -249,6 +264,8 @@ module.exports = {
         'boardId',
         'listId',
         'coverAttachmentId',
+        'epicId',
+        'epicPosition',
         'type',
         'position',
         'name',
@@ -307,8 +324,20 @@ module.exports = {
       }
     }
 
+    if (inputs.epicId) {
+      const epic = await Epic.qm.getOneById(inputs.epicId, {
+        boardId: (nextBoard || board).id,
+      });
+
+      if (!epic) {
+        throw Errors.EPIC_NOT_FOUND;
+      }
+    }
+
     const values = _.pick(inputs, [
       'coverAttachmentId',
+      'epicId',
+      'epicPosition',
       'type',
       'position',
       'name',

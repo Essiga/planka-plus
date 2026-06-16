@@ -34,6 +34,7 @@ export function* handleSocketReconnect() {
   let boards;
   let boardMemberships;
   let labels;
+  let epics;
   let lists;
   let cards;
   let cardMemberships;
@@ -62,6 +63,7 @@ export function* handleSocketReconnect() {
       boards,
       boardMemberships,
       labels,
+      epics,
       lists,
       cards,
       cardMemberships,
@@ -94,6 +96,7 @@ export function* handleSocketReconnect() {
       boards,
       boardMemberships,
       labels,
+      epics,
       lists,
       cards,
       cardMemberships,

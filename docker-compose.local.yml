@@ -1,0 +1,44 @@
+services:
+  planka:
+    # Build YOUR local source (client + server, incl. the Epics feature)
+    # instead of pulling the prebuilt public image.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: planka-plus:local
+    restart: on-failure
+    volumes:
+      - data:/app/data
+    ports:
+      - 3001:1337
+    environment:
+      - BASE_URL=http://localhost:3001
+      - DATABASE_URL=postgresql://postgres@postgres/planka
+      - SECRET_KEY=notsecretkey
+
+      # Default admin account (created/seeded on first start)
+      - DEFAULT_ADMIN_EMAIL=demo@demo.demo
+      - DEFAULT_ADMIN_PASSWORD=demo
+      - DEFAULT_ADMIN_NAME=Demo Demo
+      - DEFAULT_ADMIN_USERNAME=demo
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: on-failure
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=planka
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d planka"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  data:
+  db-data:

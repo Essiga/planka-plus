@@ -1,1 +1,6 @@
 client/src/lib/custom-ui/styles.css linguist-vendored
+
+# Shell scripts must use LF so they run inside Linux containers
+# (core.autocrlf=true on Windows otherwise rewrites them to CRLF and
+# breaks the shebang -> "./start.sh: not found")
+*.sh text eol=lf

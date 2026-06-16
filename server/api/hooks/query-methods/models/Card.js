@@ -163,6 +163,20 @@ const getByListIds = async (listIds, { sort = ['position', 'id'] } = {}) =>
     { sort },
   );
 
+const getByEpicId = (epicId, { exceptIdOrIds, sort = ['epicPosition', 'id'] } = {}) => {
+  const criteria = {
+    epicId,
+  };
+
+  if (exceptIdOrIds) {
+    criteria.id = {
+      '!=': exceptIdOrIds,
+    };
+  }
+
+  return defaultFind(criteria, { sort });
+};
+
 const getOneById = (id, { listId } = {}) => {
   const criteria = {
     id,
@@ -239,6 +253,7 @@ module.exports = {
   getByListId,
   getByEndlessListId,
   getByListIds,
+  getByEpicId,
   getOneById,
   update,
   updateOne,

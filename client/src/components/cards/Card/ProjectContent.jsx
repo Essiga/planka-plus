@@ -20,6 +20,7 @@ import StopwatchChip from '../StopwatchChip';
 import TimeAgo from '../../common/TimeAgo';
 import UserAvatar from '../../users/UserAvatar';
 import LabelChip from '../../labels/LabelChip';
+import EpicChip from '../../epics/EpicChip';
 import CustomFieldValueChip from '../../custom-field-values/CustomFieldValueChip';
 
 import styles from './ProjectContent.module.scss';
@@ -153,6 +154,13 @@ const ProjectContent = React.memo(({ cardId }) => {
         <div className={styles.coverWrapper}>
           <img src={coverUrl} alt="" className={styles.cover} />
         </div>
+      )}
+      {card.epicId && (
+        <span className={classNames(styles.labels, styles.labelsFull)}>
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <EpicChip id={card.epicId} size="tiny" />
+          </span>
+        </span>
       )}
       {labelIds.length > 0 && (
         <span className={classNames(styles.labels, !isCompact && styles.labelsFull)}>

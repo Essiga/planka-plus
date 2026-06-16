@@ -23,6 +23,7 @@
  *         - creatorUserId
  *         - prevListId
  *         - coverAttachmentId
+ *         - epicId
  *         - type
  *         - position
  *         - name
@@ -63,6 +64,11 @@
  *           nullable: true
  *           description: ID of the attachment used as cover
  *           example: "1357158568008091269"
+ *         epicId:
+ *           type: string
+ *           nullable: true
+ *           description: ID of the epic the card is linked to
+ *           example: "1357158568008091270"
  *         type:
  *           type: string
  *           enum: [project, story]
@@ -228,6 +234,15 @@ module.exports = {
     coverAttachmentId: {
       model: 'Attachment',
       columnName: 'cover_attachment_id',
+    },
+    epicId: {
+      model: 'Epic',
+      columnName: 'epic_id',
+    },
+    epicPosition: {
+      type: 'number',
+      allowNull: true,
+      columnName: 'epic_position',
     },
     subscriptionUsers: {
       collection: 'User',

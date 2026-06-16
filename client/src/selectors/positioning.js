@@ -63,6 +63,43 @@ export const selectNextLabelPosition = createSelector(
   },
 );
 
+export const selectNextEpicPosition = createSelector(
+  orm,
+  (_, boardId) => boardId,
+  (_, __, index) => index,
+  (_, __, ___, excludedId) => excludedId,
+  ({ Board }, boardId, index, excludedId) => {
+    const boardModel = Board.withId(boardId);
+
+    if (!boardModel) {
+      return boardModel;
+    }
+
+    return nextPosition(boardModel.getEpicsQuerySet().toRefArray(), index, excludedId);
+  },
+);
+
+export const selectNextCardInEpicPosition = createSelector(
+  orm,
+  (_, epicId) => epicId,
+  (_, __, index) => index,
+  (_, __, ___, excludedId) => excludedId,
+  ({ Epic }, epicId, index, excludedId) => {
+    const epicModel = Epic.withId(epicId);
+
+    if (!epicModel) {
+      return epicModel;
+    }
+
+    const positionables = epicModel
+      .getCardsQuerySet()
+      .toRefArray()
+      .map((card) => ({ ...card, position: card.epicPosition }));
+
+    return nextPosition(positionables, index, excludedId);
+  },
+);
+
 export const selectNextListPosition = createSelector(
   orm,
   (_, boardId) => boardId,
@@ -202,6 +239,8 @@ export const selectNextCustomFieldPositionInGroup = createSelector(
 export default {
   selectNextBoardPosition,
   selectNextLabelPosition,
+  selectNextEpicPosition,
+  selectNextCardInEpicPosition,
   selectNextListPosition,
   selectNextCardPosition,
   selectNextTaskListPosition,

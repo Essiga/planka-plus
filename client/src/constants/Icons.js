@@ -49,6 +49,8 @@ export const BoardViewIcons = {
   [BoardViews.KANBAN]: 'columns',
   [BoardViews.GRID]: 'th',
   [BoardViews.LIST]: 'unordered list',
+  [BoardViews.BACKLOG]: 'tasks',
+  [BoardViews.GANTT]: 'chart bar outline',
 };
 
 export const BoardContextIcons = {

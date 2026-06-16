@@ -7,6 +7,8 @@ const BOARD = 'BOARD';
 const LABEL = 'LABEL';
 const LIST = 'LIST';
 const CARD = 'CARD';
+const EPIC = 'EPIC';
+const EPIC_CARD = 'EPIC_CARD';
 const TASK_LIST = 'TASK_LIST';
 const TASK = 'TASK';
 const CUSTOM_FIELD_GROUP = 'CUSTOM_FIELD_GROUP';
@@ -17,6 +19,8 @@ export default {
   LABEL,
   LIST,
   CARD,
+  EPIC,
+  EPIC_CARD,
   TASK_LIST,
   TASK,
   CUSTOM_FIELD_GROUP,

@@ -92,6 +92,14 @@ const moveCurrentCard = (listId, index = 0, autoClose = false) => ({
   },
 });
 
+const moveCardInEpic = (id, index = 0) => ({
+  type: EntryActionTypes.CARD_IN_EPIC_MOVE,
+  payload: {
+    id,
+    index,
+  },
+});
+
 const moveCardToArchive = (id) => ({
   type: EntryActionTypes.CARD_TO_ARCHIVE_MOVE,
   payload: {
@@ -219,6 +227,7 @@ export default {
   handleCardUpdate,
   moveCard,
   moveCurrentCard,
+  moveCardInEpic,
   moveCardToArchive,
   moveCurrentCardToArchive,
   moveCardToTrash,

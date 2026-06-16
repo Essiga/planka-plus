@@ -153,6 +153,32 @@ const createSocketEventsChannel = () =>
       emit(entryActions.handleLabelDelete(item));
     };
 
+    const handleEpicCreate = api.makeHandleEpicCreate(({ item }) => {
+      emit(entryActions.handleEpicCreate(item));
+    });
+
+    const handleEpicUpdate = api.makeHandleEpicUpdate(({ item }) => {
+      emit(entryActions.handleEpicUpdate(item));
+    });
+
+    const handleEpicDelete = api.makeHandleEpicDelete(({ item }) => {
+      emit(entryActions.handleEpicDelete(item));
+    });
+
+    const handleEpicCommentCreate = api.makeHandleEpicCommentCreate(
+      ({ item, included: { users } = {} }) => {
+        emit(entryActions.handleEpicCommentCreate(item, users));
+      },
+    );
+
+    const handleEpicCommentUpdate = api.makeHandleEpicCommentUpdate(({ item }) => {
+      emit(entryActions.handleEpicCommentUpdate(item));
+    });
+
+    const handleEpicCommentDelete = api.makeHandleEpicCommentDelete(({ item }) => {
+      emit(entryActions.handleEpicCommentDelete(item));
+    });
+
     const handleCardsUpdate = api.makeHandleCardsUpdate(
       ({ items, included: { activities } = {} }) => {
         emit(entryActions.handleCardsUpdate(items, activities));
@@ -342,6 +368,14 @@ const createSocketEventsChannel = () =>
     socket.on('labelUpdate', handleLabelUpdate);
     socket.on('labelDelete', handleLabelDelete);
 
+    socket.on('epicCreate', handleEpicCreate);
+    socket.on('epicUpdate', handleEpicUpdate);
+    socket.on('epicDelete', handleEpicDelete);
+
+    socket.on('epicCommentCreate', handleEpicCommentCreate);
+    socket.on('epicCommentUpdate', handleEpicCommentUpdate);
+    socket.on('epicCommentDelete', handleEpicCommentDelete);
+
     socket.on('cardsUpdate', handleCardsUpdate);
     socket.on('cardCreate', handleCardCreate);
     socket.on('cardUpdate', handleCardUpdate);
@@ -438,6 +472,14 @@ const createSocketEventsChannel = () =>
       socket.off('labelCreate', handleLabelCreate);
       socket.off('labelUpdate', handleLabelUpdate);
       socket.off('labelDelete', handleLabelDelete);
+
+      socket.off('epicCreate', handleEpicCreate);
+      socket.off('epicUpdate', handleEpicUpdate);
+      socket.off('epicDelete', handleEpicDelete);
+
+      socket.off('epicCommentCreate', handleEpicCommentCreate);
+      socket.off('epicCommentUpdate', handleEpicCommentUpdate);
+      socket.off('epicCommentDelete', handleEpicCommentDelete);
 
       socket.off('cardsUpdate', handleCardsUpdate);
       socket.off('cardCreate', handleCardCreate);

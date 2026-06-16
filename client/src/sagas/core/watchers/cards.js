@@ -45,6 +45,9 @@ export default function* cardsWatchers() {
     takeEvery(EntryActionTypes.CURRENT_CARD_MOVE, ({ payload: { listId, index, autoClose } }) =>
       services.moveCurrentCard(listId, index, autoClose),
     ),
+    takeEvery(EntryActionTypes.CARD_IN_EPIC_MOVE, ({ payload: { id, index } }) =>
+      services.moveCardInEpic(id, index),
+    ),
     takeEvery(EntryActionTypes.CARD_TO_ARCHIVE_MOVE, ({ payload: { id } }) =>
       services.moveCardToArchive(id),
     ),

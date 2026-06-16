@@ -163,6 +163,14 @@ module.exports.routes = {
   'PATCH /api/labels/:id': 'labels/update',
   'DELETE /api/labels/:id': 'labels/delete',
 
+  'POST /api/boards/:boardId/epics': 'epics/create',
+  'PATCH /api/epics/:id': 'epics/update',
+  'DELETE /api/epics/:id': 'epics/delete',
+  'GET /api/epics/:epicId/comments': 'epic-comments/index',
+  'POST /api/epics/:epicId/comments': 'epic-comments/create',
+  'PATCH /api/epic-comments/:id': 'epic-comments/update',
+  'DELETE /api/epic-comments/:id': 'epic-comments/delete',
+
   'POST /api/boards/:boardId/lists': 'lists/create',
   'GET /api/lists/:id': 'lists/show',
   'PATCH /api/lists/:id': 'lists/update',

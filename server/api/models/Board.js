@@ -180,5 +180,9 @@ module.exports = {
       collection: 'Label',
       via: 'boardId',
     },
+    epics: {
+      collection: 'Epic',
+      via: 'boardId',
+    },
   },
 };
