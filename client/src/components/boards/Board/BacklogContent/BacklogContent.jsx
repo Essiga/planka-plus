@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { DragDropContext, Droppable } from 'react-beautiful-dnd';
-import { Button, Input } from 'semantic-ui-react';
+import { Button, Dropdown, Icon, Input } from 'semantic-ui-react';
 import { closePopup } from '../../../../lib/popup';
 
 import selectors from '../../../../selectors';
@@ -23,6 +23,7 @@ import styles from './BacklogContent.module.scss';
 import globalStyles from '../../../../styles.module.scss';
 
 const BacklogContent = React.memo(() => {
+  const board = useSelector(selectors.selectCurrentBoard);
   const epics = useSelector(selectors.selectEpicsWithCompletionForCurrentBoard);
 
   const canEdit = useSelector((state) => {
@@ -38,6 +39,64 @@ const BacklogContent = React.memo(() => {
 
   const [name, setName] = useState('');
   const [openedEpicId, setOpenedEpicId] = useState(null);
+  const [isDoneExpanded, setIsDoneExpanded] = useState(false);
+  const [sortBy, setSortBy] = useState('manual');
+
+  // Reuse the board's existing search bar (card search) to also filter epics by name
+  const search = board.search || '';
+
+  const handleToggleDone = useCallback(() => {
+    setIsDoneExpanded((value) => !value);
+  }, []);
+
+  const handleSortChange = useCallback((_, { value }) => {
+    setSortBy(value);
+  }, []);
+
+  const applySearchAndSort = useCallback(
+    (list) => {
+      const query = search.trim().toLowerCase();
+      let result = query
+        ? list.filter((epic) => (epic.name || '').toLowerCase().includes(query))
+        : list;
+
+      const byDate = (key) => (a, b) => {
+        if (!a[key] && !b[key]) {
+          return 0;
+        }
+        if (!a[key]) {
+          return 1;
+        }
+        if (!b[key]) {
+          return -1;
+        }
+        return a[key] - b[key];
+      };
+
+      if (sortBy === 'name') {
+        result = [...result].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      } else if (sortBy === 'startDate') {
+        result = [...result].sort(byDate('startDate'));
+      } else if (sortBy === 'endDate') {
+        result = [...result].sort(byDate('endDate'));
+      }
+
+      return result;
+    },
+    [search, sortBy],
+  );
+
+  const filteredActiveEpics = useMemo(
+    () => applySearchAndSort(activeEpics),
+    [applySearchAndSort, activeEpics],
+  );
+
+  const filteredDoneEpics = useMemo(
+    () => applySearchAndSort(doneEpics),
+    [applySearchAndSort, doneEpics],
+  );
+
+  const canReorder = sortBy === 'manual' && !search.trim();
 
   const handleNameChange = useCallback((_, { value }) => {
     setName(value);
@@ -117,6 +176,33 @@ const BacklogContent = React.memo(() => {
       <div className={styles.inner}>
         <div className={styles.header}>
           <h2 className={styles.headerTitle}>{t('common.backlog', { defaultValue: 'Backlog' })}</h2>
+          {epics.length > 0 && (
+            <Dropdown
+              selection
+              compact
+              className={styles.sortDropdown}
+              value={sortBy}
+              options={[
+                {
+                  key: 'manual',
+                  value: 'manual',
+                  text: t('common.manualOrder', { defaultValue: 'Manual order' }),
+                },
+                { key: 'name', value: 'name', text: t('common.name', { defaultValue: 'Name' }) },
+                {
+                  key: 'startDate',
+                  value: 'startDate',
+                  text: t('common.startDate', { defaultValue: 'Start date' }),
+                },
+                {
+                  key: 'endDate',
+                  value: 'endDate',
+                  text: t('common.endDate', { defaultValue: 'End date' }),
+                },
+              ]}
+              onChange={handleSortChange}
+            />
+          )}
         </div>
         {canEdit && (
           <form className={styles.addForm} onSubmit={handleSubmit}>
@@ -146,17 +232,20 @@ const BacklogContent = React.memo(() => {
                   {...droppableProps} // eslint-disable-line react/jsx-props-no-spreading
                   ref={innerRef}
                 >
-                  {activeEpics.length === 0 && (
+                  {filteredActiveEpics.length === 0 && (
                     <div className={styles.empty}>
-                      {t('common.noActiveEpics', { defaultValue: 'No active epics' })}
+                      {search.trim()
+                        ? t('common.noEpicsMatchSearch', { defaultValue: 'No epics match' })
+                        : t('common.noActiveEpics', { defaultValue: 'No active epics' })}
                     </div>
                   )}
-                  {activeEpics.map((epic, index) => (
+                  {filteredActiveEpics.map((epic, index) => (
                     <EpicItem
                       key={epic.id}
                       id={epic.id}
                       index={index}
                       canEdit={canEdit}
+                      draggable={canReorder}
                       onOpen={handleEpicOpen}
                     />
                   ))}
@@ -165,32 +254,35 @@ const BacklogContent = React.memo(() => {
               )}
             </Droppable>
 
-            {doneEpics.length > 0 && (
+            {filteredDoneEpics.length > 0 && (
               <>
-                <div className={styles.sectionTitle}>
-                  {t('common.done', { defaultValue: 'Done' })} ({doneEpics.length})
-                </div>
-                <Droppable droppableId="done-epics" type={DroppableTypes.EPIC_DONE}>
-                  {({ innerRef, droppableProps, placeholder }) => (
-                    <div
-                      {...droppableProps} // eslint-disable-line react/jsx-props-no-spreading
-                      ref={innerRef}
-                      className={styles.doneSection}
-                    >
-                      {doneEpics.map((epic, index) => (
-                        <EpicItem
-                          key={epic.id}
-                          id={epic.id}
-                          index={index}
-                          canEdit={canEdit}
-                          draggable={false}
-                          onOpen={handleEpicOpen}
-                        />
-                      ))}
-                      {placeholder}
-                    </div>
-                  )}
-                </Droppable>
+                <button type="button" className={styles.sectionTitle} onClick={handleToggleDone}>
+                  <Icon fitted name={isDoneExpanded ? 'caret down' : 'caret right'} />
+                  {t('common.done', { defaultValue: 'Done' })} ({filteredDoneEpics.length})
+                </button>
+                {isDoneExpanded && (
+                  <Droppable droppableId="done-epics" type={DroppableTypes.EPIC_DONE}>
+                    {({ innerRef, droppableProps, placeholder }) => (
+                      <div
+                        {...droppableProps} // eslint-disable-line react/jsx-props-no-spreading
+                        ref={innerRef}
+                        className={styles.doneSection}
+                      >
+                        {filteredDoneEpics.map((epic, index) => (
+                          <EpicItem
+                            key={epic.id}
+                            id={epic.id}
+                            index={index}
+                            canEdit={canEdit}
+                            draggable={false}
+                            onOpen={handleEpicOpen}
+                          />
+                        ))}
+                        {placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                )}
               </>
             )}
           </DragDropContext>

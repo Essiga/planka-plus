@@ -16,6 +16,7 @@ import { Input } from '../../../lib/custom-ui';
 import selectors from '../../../selectors';
 import entryActions from '../../../entry-actions';
 import { useNestedRef } from '../../../hooks';
+import { BoardViews } from '../../../constants/Enums';
 import UserAvatar from '../../users/UserAvatar';
 import BoardMembershipsStep from '../../board-memberships/BoardMembershipsStep';
 import LabelChip from '../../labels/LabelChip';
@@ -245,7 +246,11 @@ const Filters = React.memo(() => {
         <Input
           ref={handleSearchFieldRef}
           value={search}
-          placeholder={t('common.searchCards')}
+          placeholder={
+            board.view === BoardViews.BACKLOG
+              ? t('common.searchEpics', { defaultValue: 'Search epics' })
+              : t('common.searchCards')
+          }
           maxLength={128}
           icon={
             isSearchActive ? (
