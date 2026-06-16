@@ -77,13 +77,14 @@ const ProjectContent = React.memo(({ cardId }) => {
     return attachment && attachment.data.thumbnailUrls.outside360;
   });
 
-  const { listName, withCreator, withAge } = useSelector((state) => {
+  const { listName, withCreator, withAge, isFixedSize } = useSelector((state) => {
     const board = selectors.selectCurrentBoard(state);
 
     return {
       listName: list.name && (board.view === BoardViews.KANBAN ? null : list.name),
       withCreator: board.alwaysDisplayCardCreator,
       withAge: board.displayCardAges,
+      isFixedSize: board.useFixedCardSize,
     };
   }, shallowEqual);
 
@@ -148,7 +149,7 @@ const ProjectContent = React.memo(({ cardId }) => {
     ) : null;
 
   return (
-    <div className={styles.wrapper}>
+    <div className={classNames(styles.wrapper, isFixedSize && styles.wrapperFixed)}>
       <div className={classNames(styles.name, card.isClosed && styles.nameClosed)}>{card.name}</div>
       {coverUrl && (
         <div className={styles.coverWrapper}>

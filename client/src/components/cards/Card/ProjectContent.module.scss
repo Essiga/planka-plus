@@ -113,10 +113,55 @@
     }
   }
 
+  // Fixed card size: clamp every card to the same compact height so a card's
+  // visual weight no longer implies importance. Clipped content (extra labels,
+  // task lists, cover, long names, the meta row) is revealed on hover.
+  .wrapperFixed {
+    box-sizing: border-box;
+    height: 104px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .wrapperFixed::before {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
+    bottom: 0;
+    content: "";
+    height: 26px;
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    z-index: 2;
+  }
+
+  .wrapperFixed .name {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
   :global(.card):hover {
     .cover {
       filter: brightness(1.1);
       transform: scale(1.05);
+    }
+
+    .wrapperFixed {
+      height: auto;
+      min-height: 104px;
+      overflow: visible;
+
+      &::before {
+        display: none;
+      }
+
+      .name {
+        display: block;
+        overflow: visible;
+        -webkit-line-clamp: unset;
+      }
     }
   }
 }

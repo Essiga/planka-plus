@@ -59,6 +59,14 @@ const Others = React.memo(() => {
         className={styles.radio}
         onChange={handleChange}
       />
+      <Radio
+        toggle
+        name="useFixedCardSize"
+        checked={board.useFixedCardSize}
+        label={t('common.useFixedCardSize', { defaultValue: 'Use fixed card size' })}
+        className={styles.radio}
+        onChange={handleChange}
+      />
     </Segment>
   );
 });

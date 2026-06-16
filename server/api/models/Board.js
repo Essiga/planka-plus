@@ -153,6 +153,11 @@ module.exports = {
       defaultsTo: false,
       columnName: 'expand_task_lists_by_default',
     },
+    useFixedCardSize: {
+      type: 'boolean',
+      defaultsTo: false,
+      columnName: 'use_fixed_card_size',
+    },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗
     //  ║╣ ║║║╠╩╗║╣  ║║╚═╗

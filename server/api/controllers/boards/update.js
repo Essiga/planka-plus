@@ -130,6 +130,9 @@ module.exports = {
     expandTaskListsByDefault: {
       type: 'boolean',
     },
+    useFixedCardSize: {
+      type: 'boolean',
+    },
     isSubscribed: {
       type: 'boolean',
     },
@@ -169,6 +172,7 @@ module.exports = {
         'alwaysDisplayCardCreator',
         'displayCardAges',
         'expandTaskListsByDefault',
+        'useFixedCardSize',
       );
     }
     if (isBoardMember) {
@@ -188,6 +192,7 @@ module.exports = {
       'alwaysDisplayCardCreator',
       'displayCardAges',
       'expandTaskListsByDefault',
+      'useFixedCardSize',
       'isSubscribed',
     ]);
 
