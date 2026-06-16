@@ -350,7 +350,9 @@ const ProjectContent = React.memo(() => {
               card.stopwatch ||
               board.alwaysDisplayCardCreator ||
               userIds.length > 0 ||
-              labelIds.length > 0) && (
+              labelIds.length > 0 ||
+              canUseLabels ||
+              card.epicId) && (
               <div className={styles.moduleWrapper}>
                 {board.alwaysDisplayCardCreator && (
                   <div className={styles.attachments}>
